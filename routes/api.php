@@ -1,0 +1,169 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\FamilyController;
+use App\Http\Controllers\Api\EconomicController;
+use App\Http\Controllers\Api\SocialController;
+use App\Http\Controllers\Api\BantuanSosialController;
+use App\Http\Controllers\Api\PendaftaranController;
+use App\Http\Controllers\Api\NewsController;
+use App\Http\Controllers\Api\ComplaintController;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+*/
+
+// Public Routes (tidak perlu login)
+Route::prefix('auth')->group(function () {
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('login', [AuthController::class, 'login']);
+});
+
+// Public News Routes (bisa diakses tanpa login)
+Route::prefix('news')->group(function () {
+    Route::get('/', [NewsController::class, 'index']);
+    Route::get('{slug}', [NewsController::class, 'show']);
+});
+
+// Public Bantuan Sosial Routes (untuk melihat bantuan yang tersedia)
+Route::prefix('bantuan-sosial')->group(function () {
+    Route::get('/', [BantuanSosialController::class, 'index']);
+    Route::get('{id}', [BantuanSosialController::class, 'show']);
+});
+
+// Protected Routes (perlu login)
+Route::middleware(['auth:sanctum'])->group(function () {
+    
+    // Auth Routes
+    Route::prefix('auth')->group(function () {
+        Route::post('logout', [AuthController::class, 'logout']);
+        Route::get('me', [AuthController::class, 'me']);
+        Route::post('refresh', [AuthController::class, 'refresh']);
+    });
+
+    // Profile Routes
+    Route::prefix('profile')->group(function () {
+        Route::get('/', [ProfileController::class, 'show']);
+        Route::post('/', [ProfileController::class, 'store']);
+        Route::post('photo', [ProfileController::class, 'updatePhoto']);
+    });
+
+    // Family Routes
+    Route::prefix('family')->group(function () {
+        Route::get('/', [FamilyController::class, 'index']);
+        Route::post('/', [FamilyController::class, 'store']);
+        Route::get('statistics', [FamilyController::class, 'statistics']);
+        Route::get('{id}', [FamilyController::class, 'show']);
+        Route::put('{id}', [FamilyController::class, 'update']);
+        Route::delete('{id}', [FamilyController::class, 'destroy']);
+    });
+
+    // Economic Routes
+    Route::prefix('economic')->group(function () {
+        Route::get('/', [EconomicController::class, 'show']);
+        Route::post('/', [EconomicController::class, 'store']);
+        Route::get('analysis', [EconomicController::class, 'analysis']);
+    });
+
+    // Social Routes
+    Route::prefix('social')->group(function () {
+        Route::get('/', [SocialController::class, 'show']);
+        Route::post('/', [SocialController::class, 'store']);
+        Route::get('profile', [SocialController::class, 'profile']);
+    });
+
+    // Pendaftaran Routes (untuk user)
+    Route::prefix('pendaftaran')->group(function () {
+        Route::get('/', [PendaftaranController::class, 'index']);
+        Route::post('/', [PendaftaranController::class, 'store']);
+        Route::get('statistics', [PendaftaranController::class, 'statistics']);
+        Route::get('{id}', [PendaftaranController::class, 'show']);
+        Route::get('{id}/dokumen/{index}', [PendaftaranController::class, 'downloadDokumen']);
+    });
+
+    // Complaint Routes (untuk user)
+    Route::prefix('complaint')->group(function () {
+        Route::get('/', [ComplaintController::class, 'index']);
+        Route::post('/', [ComplaintController::class, 'store']);
+        Route::get('dashboard', [ComplaintController::class, 'userDashboard']);
+        Route::get('{id}', [ComplaintController::class, 'show']);
+        Route::put('{id}', [ComplaintController::class, 'update']);
+        Route::post('{id}/feedback', [ComplaintController::class, 'giveFeedback']);
+    });
+
+    // Admin Only Routes
+    Route::middleware(['admin'])->prefix('admin')->group(function () {
+        
+        // Admin Bantuan Sosial Routes
+        Route::prefix('bantuan-sosial')->group(function () {
+            Route::get('/', [BantuanSosialController::class, 'adminIndex']);
+            Route::post('/', [BantuanSosialController::class, 'store']);
+            Route::put('{id}', [BantuanSosialController::class, 'update']);
+            Route::delete('{id}', [BantuanSosialController::class, 'destroy']);
+        });
+
+        // Admin Pendaftaran Routes
+        Route::prefix('pendaftaran')->group(function () {
+            Route::get('/', [PendaftaranController::class, 'adminIndex']);
+            Route::put('{id}/status', [PendaftaranController::class, 'updateStatus']);
+        });
+
+        // Admin News Routes
+        Route::prefix('news')->group(function () {
+            Route::get('/', [NewsController::class, 'adminIndex']);
+            Route::post('/', [NewsController::class, 'store']);
+            Route::put('{id}', [NewsController::class, 'update']);
+            Route::delete('{id}', [NewsController::class, 'destroy']);
+            Route::patch('{id}/toggle-publish', [NewsController::class, 'togglePublish']);
+        });
+
+        // Admin Complaint Routes
+        Route::prefix('complaint')->group(function () {
+            Route::get('/', [ComplaintController::class, 'adminIndex']);
+            Route::get('statistics', [ComplaintController::class, 'statistics']);
+            Route::put('{id}/status', [ComplaintController::class, 'updateStatus']);
+        });
+
+        // Admin Dashboard Routes (untuk statistik umum)
+        Route::prefix('dashboard')->group(function () {
+            Route::get('stats', function () {
+                return response()->json([
+                    'status' => 'success',
+                    'data' => [
+                        'total_users' => \App\Models\User::where('role', 'user')->count(),
+                        'total_profiles' => \App\Models\Profile::count(),
+                        'total_families' => \App\Models\Family::count(),
+                        'total_bantuan' => \App\Models\BantuanSosial::count(),
+                        'total_pendaftaran' => \App\Models\Pendaftaran::count(),
+                        'total_news' => \App\Models\News::count(),
+                        'total_complaints' => \App\Models\Complaint::count(),
+                        'pending_pendaftaran' => \App\Models\Pendaftaran::where('status', 'Pending')->count(),
+                        'open_complaints' => \App\Models\Complaint::whereIn('status', ['Baru', 'Diproses'])->count(),
+                    ]
+                ]);
+            });
+        });
+    });
+});
+
+// Test Route
+Route::get('test', function () {
+    return response()->json([
+        'status' => 'success',
+        'message' => 'API is working!',
+        'timestamp' => now(),
+    ]);
+});
+
+// Route fallback untuk API tidak ditemukan
+Route::fallback(function () {
+    return response()->json([
+        'status' => 'error',
+        'message' => 'API endpoint not found',
+    ], 404);
+});
