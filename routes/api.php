@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\BantuanSosialController;
 use App\Http\Controllers\Api\PendaftaranController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\ComplaintController;
+use App\Http\Controllers\Api\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -127,6 +128,18 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/', [ComplaintController::class, 'adminIndex']);
             Route::get('statistics', [ComplaintController::class, 'statistics']);
             Route::put('{id}/status', [ComplaintController::class, 'updateStatus']);
+        });
+
+        // Admin User Management Routes
+        Route::prefix('users')->group(function () {
+            Route::get('/', [UserController::class, 'index']);
+            Route::get('statistics', [UserController::class, 'statistics']);
+            Route::post('/', [UserController::class, 'store']);
+            Route::get('{id}', [UserController::class, 'show']);
+            Route::put('{id}', [UserController::class, 'update']);
+            Route::delete('{id}', [UserController::class, 'destroy']);
+            Route::patch('{id}/status', [UserController::class, 'updateStatus']);
+            Route::post('bulk-action', [UserController::class, 'bulkAction']);
         });
 
         // Admin Dashboard Routes (untuk statistik umum)
