@@ -119,6 +119,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('/', [NewsController::class, 'adminIndex']);
             Route::post('/', [NewsController::class, 'store']);
             Route::put('{id}', [NewsController::class, 'update']);
+            Route::post('{id}', [NewsController::class, 'update']); // Method spoofing support
             Route::delete('{id}', [NewsController::class, 'destroy']);
             Route::patch('{id}/toggle-publish', [NewsController::class, 'togglePublish']);
         });
@@ -170,6 +171,24 @@ Route::get('test', function () {
         'status' => 'success',
         'message' => 'API is working!',
         'timestamp' => now(),
+    ]);
+});
+
+// Debug Route for authenticated user
+Route::middleware(['auth:sanctum'])->get('debug/user', function () {
+    return response()->json([
+        'status' => 'success',
+        'user' => request()->user(),
+        'token_valid' => true,
+    ]);
+});
+
+// Debug Route for admin user  
+Route::middleware(['auth:sanctum', 'admin'])->get('debug/admin', function () {
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Admin access working!',
+        'user' => request()->user(),
     ]);
 });
 

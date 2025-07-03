@@ -131,16 +131,24 @@ class NewsController extends Controller
      */
     public function store(Request $request)
     {
+        // Log request untuk debugging
+        \Log::info('News store request:', [
+            'data' => $request->all(),
+            'files' => $request->hasFile('gambar_utama') ? 'has file' : 'no file',
+            'user_id' => $request->user()?->id
+        ]);
+
         $validator = Validator::make($request->all(), [
             'judul' => 'required|string|max:255',
             'slug' => 'nullable|string|unique:news,slug',
             'konten' => 'required|string',
             'kategori' => 'required|in:Pengumuman,Kegiatan,Bantuan,Umum',
             'gambar_utama' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'is_published' => 'boolean',
+            'is_published' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
+            \Log::error('News validation failed:', $validator->errors()->toArray());
             return response()->json([
                 'status' => 'error',
                 'message' => 'Validation failed',
@@ -148,35 +156,65 @@ class NewsController extends Controller
             ], 422);
         }
 
-        $data = $request->except(['gambar_utama']);
-        $data['created_by'] = $request->user()->id;
+        try {
+            $data = $request->except(['gambar_utama']);
+            $data['created_by'] = $request->user()->id;
 
-        // Generate slug jika tidak ada
-        if (empty($data['slug'])) {
-            $data['slug'] = Str::slug($data['judul']);
+            // Handle boolean conversion untuk is_published
+            $data['is_published'] = filter_var($request->input('is_published', false), FILTER_VALIDATE_BOOLEAN);
+
+            // Generate slug jika tidak ada
+            if (empty($data['slug'])) {
+                $data['slug'] = Str::slug($data['judul']);
+            }
+
+            // Ensure unique slug
+            $originalSlug = $data['slug'];
+            $counter = 1;
+            while (News::where('slug', $data['slug'])->exists()) {
+                $data['slug'] = $originalSlug . '-' . $counter;
+                $counter++;
+            }
+
+            // Set published_at jika published
+            if ($data['is_published']) {
+                $data['published_at'] = now();
+            } else {
+                $data['published_at'] = null;
+            }
+
+            // Handle upload gambar
+            if ($request->hasFile('gambar_utama')) {
+                $file = $request->file('gambar_utama');
+                $filename = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('news_images', $filename, 'public');
+                $data['gambar_utama'] = $path;
+            }
+
+            \Log::info('Creating news with data:', $data);
+
+            $news = News::create($data);
+            $news->load('author');
+
+            \Log::info('News created successfully:', ['id' => $news->id]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'News created successfully',
+                'data' => $news
+            ], 201);
+
+        } catch (\Exception $e) {
+            \Log::error('Error creating news:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to create news: ' . $e->getMessage()
+            ], 500);
         }
-
-        // Set published_at jika published
-        if ($request->is_published) {
-            $data['published_at'] = now();
-        }
-
-        // Handle upload gambar
-        if ($request->hasFile('gambar_utama')) {
-            $file = $request->file('gambar_utama');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('news_images', $filename, 'public');
-            $data['gambar_utama'] = $path;
-        }
-
-        $news = News::create($data);
-        $news->load('author');
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'News created successfully',
-            'data' => $news
-        ], 201);
     }
 
     /**
@@ -184,9 +222,18 @@ class NewsController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // Log request untuk debugging
+        \Log::info('News update request:', [
+            'id' => $id,
+            'data' => $request->all(),
+            'files' => $request->hasFile('gambar_utama') ? 'has file' : 'no file',
+            'user_id' => $request->user()?->id
+        ]);
+
         $news = News::find($id);
 
         if (!$news) {
+            \Log::error('News not found for update:', ['id' => $id]);
             return response()->json([
                 'status' => 'error',
                 'message' => 'News not found'
@@ -199,10 +246,15 @@ class NewsController extends Controller
             'konten' => 'required|string',
             'kategori' => 'required|in:Pengumuman,Kegiatan,Bantuan,Umum',
             'gambar_utama' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'is_published' => 'boolean',
+            'is_published' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
+            \Log::error('News update validation failed:', [
+                'id' => $id,
+                'errors' => $validator->errors()->toArray(),
+                'request_data' => $request->all()
+            ]);
             return response()->json([
                 'status' => 'error',
                 'message' => 'Validation failed',
@@ -210,39 +262,70 @@ class NewsController extends Controller
             ], 422);
         }
 
-        $data = $request->except(['gambar_utama']);
+        try {
+            $data = $request->except(['gambar_utama']);
 
-        // Update slug jika judul berubah
-        if ($request->judul !== $news->judul && empty($data['slug'])) {
-            $data['slug'] = Str::slug($data['judul']);
-        }
+            // Handle boolean conversion untuk is_published
+            $data['is_published'] = filter_var($request->input('is_published', false), FILTER_VALIDATE_BOOLEAN);
 
-        // Set published_at jika baru dipublish
-        if ($request->is_published && !$news->is_published) {
-            $data['published_at'] = now();
-        }
-
-        // Handle upload gambar baru
-        if ($request->hasFile('gambar_utama')) {
-            // Hapus gambar lama
-            if ($news->gambar_utama) {
-                Storage::delete('public/' . $news->gambar_utama);
+            // Update slug jika judul berubah dan slug tidak diberikan
+            if ($request->judul !== $news->judul && empty($data['slug'])) {
+                $data['slug'] = Str::slug($data['judul']);
+                
+                // Ensure unique slug
+                $originalSlug = $data['slug'];
+                $counter = 1;
+                while (News::where('slug', $data['slug'])->where('id', '!=', $id)->exists()) {
+                    $data['slug'] = $originalSlug . '-' . $counter;
+                    $counter++;
+                }
             }
 
-            $file = $request->file('gambar_utama');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('news_images', $filename, 'public');
-            $data['gambar_utama'] = $path;
+            // Set published_at jika baru dipublish
+            if ($data['is_published'] && !$news->is_published) {
+                $data['published_at'] = now();
+            } elseif (!$data['is_published']) {
+                $data['published_at'] = null;
+            }
+
+            // Handle upload gambar baru
+            if ($request->hasFile('gambar_utama')) {
+                // Hapus gambar lama
+                if ($news->gambar_utama) {
+                    Storage::delete('public/' . $news->gambar_utama);
+                }
+
+                $file = $request->file('gambar_utama');
+                $filename = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs('news_images', $filename, 'public');
+                $data['gambar_utama'] = $path;
+            }
+
+            \Log::info('Updating news with data:', $data);
+
+            $news->update($data);
+            $news->load('author');
+
+            \Log::info('News updated successfully:', ['id' => $news->id]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'News updated successfully',
+                'data' => $news
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error updating news:', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to update news: ' . $e->getMessage()
+            ], 500);
         }
-
-        $news->update($data);
-        $news->load('author');
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'News updated successfully',
-            'data' => $news
-        ]);
     }
 
     /**
