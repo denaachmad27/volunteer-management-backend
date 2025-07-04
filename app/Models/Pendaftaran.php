@@ -20,6 +20,9 @@ class Pendaftaran extends Model
         'catatan_admin',
         'tanggal_persetujuan',
         'tanggal_penyerahan',
+        'is_resubmission',
+        'resubmitted_at',
+        'resubmission_count',
     ];
 
     protected $casts = [
@@ -27,6 +30,9 @@ class Pendaftaran extends Model
         'tanggal_persetujuan' => 'date',
         'tanggal_penyerahan' => 'date',
         'dokumen_upload' => 'array',
+        'is_resubmission' => 'boolean',
+        'resubmitted_at' => 'datetime',
+        'resubmission_count' => 'integer',
     ];
 
     // Relationships
@@ -38,6 +44,11 @@ class Pendaftaran extends Model
     public function bantuanSosial()
     {
         return $this->belongsTo(BantuanSosial::class);
+    }
+
+    public function histories()
+    {
+        return $this->hasMany(PendaftaranHistory::class)->orderBy('created_at', 'desc');
     }
 
     // Helper methods

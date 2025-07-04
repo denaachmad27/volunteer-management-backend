@@ -82,6 +82,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::prefix('pendaftaran')->group(function () {
         Route::get('/', [PendaftaranController::class, 'index']);
         Route::post('/', [PendaftaranController::class, 'store']);
+        Route::post('{id}/resubmit', [PendaftaranController::class, 'resubmit']);
         Route::get('statistics', [PendaftaranController::class, 'statistics']);
         Route::get('{id}', [PendaftaranController::class, 'show']);
         Route::get('{id}/dokumen/{index}', [PendaftaranController::class, 'downloadDokumen']);
@@ -104,6 +105,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::prefix('bantuan-sosial')->group(function () {
             Route::get('/', [BantuanSosialController::class, 'adminIndex']);
             Route::post('/', [BantuanSosialController::class, 'store']);
+            Route::get('{id}', [BantuanSosialController::class, 'show']);
             Route::put('{id}', [BantuanSosialController::class, 'update']);
             Route::delete('{id}', [BantuanSosialController::class, 'destroy']);
         });
@@ -111,6 +113,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Admin Pendaftaran Routes
         Route::prefix('pendaftaran')->group(function () {
             Route::get('/', [PendaftaranController::class, 'adminIndex']);
+            Route::get('{id}', [PendaftaranController::class, 'adminShow']);
             Route::put('{id}/status', [PendaftaranController::class, 'updateStatus']);
         });
 
