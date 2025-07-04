@@ -112,7 +112,19 @@ class NewsController extends Controller
             });
         }
 
-        $news = $query->orderBy('created_at', 'desc')->paginate(10);
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        
+        // Validate sort fields
+        $allowedSortFields = ['created_at', 'updated_at', 'published_at', 'judul', 'views'];
+        if (in_array($sortBy, $allowedSortFields)) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $news = $query->paginate(10);
 
         // Tambahkan calculated fields
         $news->getCollection()->each(function ($article) {
