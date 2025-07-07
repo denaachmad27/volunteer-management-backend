@@ -15,6 +15,7 @@ class Complaint extends Model
         'judul',
         'kategori',
         'deskripsi',
+        'image_path',
         'prioritas',
         'status',
         'respon_admin',

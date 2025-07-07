@@ -52,6 +52,7 @@ class ComplaintController extends Controller
             'kategori' => 'required|in:Teknis,Pelayanan,Bantuan,Saran,Lainnya',
             'deskripsi' => 'required|string',
             'prioritas' => 'required|in:Rendah,Sedang,Tinggi,Urgent',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Max 2MB
         ]);
 
         if ($validator->fails()) {
@@ -62,11 +63,23 @@ class ComplaintController extends Controller
             ], 422);
         }
 
+        $imagePath = null;
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $filename = time() . '_' . $image->getClientOriginalName();
+            
+            // Store in public/storage/complaint_images directory
+            $imagePath = $image->storeAs('complaint_images', $filename, 'public');
+        }
+
         $complaint = Complaint::create([
             'user_id' => $request->user()->id,
             'judul' => $request->judul,
             'kategori' => $request->kategori,
             'deskripsi' => $request->deskripsi,
+            'image_path' => $imagePath,
             'prioritas' => $request->prioritas,
             'status' => 'Baru',
             // no_tiket akan di-generate otomatis via model boot
