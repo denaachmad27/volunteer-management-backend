@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\PendaftaranController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\ComplaintController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -148,22 +149,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         // Admin Dashboard Routes (untuk statistik umum)
         Route::prefix('dashboard')->group(function () {
-            Route::get('stats', function () {
-                return response()->json([
-                    'status' => 'success',
-                    'data' => [
-                        'total_users' => \App\Models\User::where('role', 'user')->count(),
-                        'total_profiles' => \App\Models\Profile::count(),
-                        'total_families' => \App\Models\Family::count(),
-                        'total_bantuan' => \App\Models\BantuanSosial::count(),
-                        'total_pendaftaran' => \App\Models\Pendaftaran::count(),
-                        'total_news' => \App\Models\News::count(),
-                        'total_complaints' => \App\Models\Complaint::count(),
-                        'pending_pendaftaran' => \App\Models\Pendaftaran::where('status', 'Pending')->count(),
-                        'open_complaints' => \App\Models\Complaint::whereIn('status', ['Baru', 'Diproses'])->count(),
-                    ]
-                ]);
-            });
+            Route::get('statistics', [DashboardController::class, 'adminStatistics']);
         });
     });
 });
