@@ -41,21 +41,56 @@ class Complaint extends Model
         
         static::creating(function ($complaint) {
             if (empty($complaint->no_tiket)) {
-                $complaint->no_tiket = $complaint->generateNoTiket();
+                $complaint->no_tiket = $complaint->generateUniqueNoTiket();
             }
         });
     }
 
     // Helper methods
+    public function generateUniqueNoTiket()
+    {
+        $maxRetries = 10;
+        $retryCount = 0;
+        
+        while ($retryCount < $maxRetries) {
+            $noTiket = $this->generateNoTiket();
+            
+            // Check if this number already exists
+            $exists = static::where('no_tiket', $noTiket)->exists();
+            
+            if (!$exists) {
+                return $noTiket;
+            }
+            
+            $retryCount++;
+            // Add small delay to prevent tight loop
+            usleep(1000); // 1ms delay
+        }
+        
+        // Fallback: use timestamp if all else fails
+        return 'TKT-' . date('Ymd') . '-' . time();
+    }
+    
     public function generateNoTiket()
     {
         $year = date('Y');
         $month = date('m');
-        $lastNumber = static::whereYear('created_at', $year)
-                           ->whereMonth('created_at', $month)
-                           ->count() + 1;
+        $prefix = 'TKT-' . $year . $month . '-';
         
-        return 'TKT-' . $year . $month . '-' . str_pad($lastNumber, 4, '0', STR_PAD_LEFT);
+        // Get the last ticket number for current year-month
+        $lastTicket = static::where('no_tiket', 'like', $prefix . '%')
+                           ->orderBy('no_tiket', 'desc')
+                           ->first();
+        
+        if ($lastTicket) {
+            // Extract number from last ticket (e.g., "TKT-202507-0005" -> "0005")
+            $lastNumber = (int) substr($lastTicket->no_tiket, -4);
+            $nextNumber = $lastNumber + 1;
+        } else {
+            $nextNumber = 1;
+        }
+        
+        return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 
     public function getStatusColorAttribute()

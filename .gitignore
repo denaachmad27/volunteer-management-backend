@@ -22,3 +22,65 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# WhatsApp Service Files
+/chrome-user-data/
+/whatsapp-sessions/
+whatsapp-server.js
+whatsapp-service.js
+start-whatsapp-service.js
+test-whatsapp-integration.js
+test-simple-service.js
+
+# Node.js dependencies and builds
+package-lock.json
+node_modules/
+
+# Test and development files
+test_api.php
+fix-linux-deps.js
+fix-puppeteer.js
+install-puppeteer.js
+
+# Documentation files (optional - bisa di-uncomment jika mau keep)
+# DATABASE_SETUP.md
+# DEBUG_SETUP.md
+# EMAIL_SETUP_GUIDE.md
+# WHATSAPP_INTEGRATION_GUIDE.md
+# WHATSAPP_TROUBLESHOOTING.md
+# WSL_USAGE_GUIDE.md
+
+# Storage files
+/storage/app/public/complaint_images/
+/storage/app/public/news_images/
+/storage/framework/cache/data/
+/storage/framework/sessions/
+/storage/framework/views/
+/storage/logs/laravel.log
+
+# Database files
+/database/database.sqlite
+/database/add_resubmission_fields.sql
+/database/create_pendaftaran_history.sql
+/database/fix_enum_status.sql
+
+# Browser cache and data
+chrome_debug.log
+DevToolsActivePort
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+*.swp
+*.swo
+*~
+.project
+.settings/
+.buildpath

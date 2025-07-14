@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EmailController;
 use App\Http\Controllers\Api\ForwardingSettingsController;
+use App\Http\Controllers\Api\WhatsappController;
+use App\Http\Controllers\Api\DepartmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -170,6 +172,29 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::put('departments/{id}', [ForwardingSettingsController::class, 'updateDepartment']);
             Route::delete('departments/{id}', [ForwardingSettingsController::class, 'deleteDepartment']);
             Route::get('departments/category/{category}', [ForwardingSettingsController::class, 'getDepartmentByCategory']);
+        });
+
+        // Admin WhatsApp Routes
+        Route::prefix('whatsapp')->group(function () {
+            Route::get('settings', [WhatsappController::class, 'getSettings']);
+            Route::put('settings', [WhatsappController::class, 'updateSettings']);
+            Route::get('qr-code', [WhatsappController::class, 'getQRCode']);
+            Route::post('initialize', [WhatsappController::class, 'initializeSession']);
+            Route::post('disconnect', [WhatsappController::class, 'disconnect']);
+            Route::post('test-connection', [WhatsappController::class, 'testConnection']);
+            Route::post('send/{complaintId}', [WhatsappController::class, 'sendToDepartment']);
+        });
+
+        // Admin Department Routes
+        Route::prefix('departments')->group(function () {
+            Route::get('/', [DepartmentController::class, 'index']);
+            Route::post('/', [DepartmentController::class, 'store']);
+            Route::get('active-with-categories', [DepartmentController::class, 'getActiveWithCategories']);
+            Route::get('category/{category}', [DepartmentController::class, 'getByCategory']);
+            Route::get('{id}', [DepartmentController::class, 'show']);
+            Route::put('{id}', [DepartmentController::class, 'update']);
+            Route::delete('{id}', [DepartmentController::class, 'destroy']);
+            Route::patch('{id}/toggle-status', [DepartmentController::class, 'toggleStatus']);
         });
     });
 });

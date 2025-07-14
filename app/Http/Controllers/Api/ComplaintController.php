@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Complaint;
+use App\Models\WhatsappSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Http;
 
 class ComplaintController extends Controller
 {
@@ -88,6 +90,9 @@ class ComplaintController extends Controller
         // Tambahkan calculated fields
         $complaint->status_color = $complaint->getStatusColorAttribute();
         $complaint->prioritas_color = $complaint->getPrioritasColorAttribute();
+
+        // Forward to WhatsApp if enabled
+        $this->forwardToWhatsApp($complaint);
 
         return response()->json([
             'status' => 'success',
@@ -398,5 +403,87 @@ class ComplaintController extends Controller
                 'recent_complaints' => $recentComplaints,
             ]
         ]);
+    }
+
+    /**
+     * Forward complaint to WhatsApp
+     */
+    private function forwardToWhatsApp(Complaint $complaint)
+    {
+        try {
+            // Get WhatsApp settings
+            $whatsappSettings = WhatsappSetting::first();
+            
+            // Check if WhatsApp forwarding is enabled
+            if (!$whatsappSettings || !$whatsappSettings->is_active) {
+                \Log::info('WhatsApp forwarding is disabled');
+                return;
+            }
+
+            // Get department mapping for this complaint category
+            $departmentMappings = $whatsappSettings->department_mappings ?? [];
+            $departmentInfo = $departmentMappings[$complaint->kategori] ?? null;
+
+            if (!$departmentInfo || !isset($departmentInfo['phone_number'])) {
+                \Log::warning("No WhatsApp number configured for category: {$complaint->kategori}");
+                return;
+            }
+
+            // Get the complaint with user info
+            $complaint->load('user');
+
+            // Format message using template
+            $messageTemplate = $whatsappSettings->default_message_template;
+            $formattedMessage = $this->formatComplaintMessage($complaint, $messageTemplate, $departmentInfo);
+
+            // Send to WhatsApp service
+            $whatsappServiceUrl = 'http://localhost:3001';
+            $response = Http::timeout(10)->post("{$whatsappServiceUrl}/send-message", [
+                'phone_number' => $departmentInfo['phone_number'],
+                'message' => $formattedMessage
+            ]);
+
+            if ($response->successful()) {
+                \Log::info("Complaint #{$complaint->no_tiket} forwarded to WhatsApp successfully");
+            } else {
+                \Log::error("Failed to forward complaint #{$complaint->no_tiket} to WhatsApp: " . $response->body());
+            }
+
+        } catch (\Exception $e) {
+            \Log::error("Error forwarding complaint to WhatsApp: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Format complaint message using template
+     */
+    private function formatComplaintMessage(Complaint $complaint, string $template, array $departmentInfo): string
+    {
+        $message = "📋 *PENGADUAN BARU*\n\n";
+        $message .= "📅 **Tanggal:** " . $complaint->created_at->format('d/m/Y H:i') . "\n";
+        $message .= "🎫 **No. Tiket:** #{$complaint->no_tiket}\n";
+        $message .= "👤 **Nama:** {$complaint->user->name}\n";
+        $message .= "📱 **Phone:** {$complaint->user->phone}\n";
+        $message .= "📧 **Email:** {$complaint->user->email}\n";
+        $message .= "🏢 **Kategori:** {$complaint->kategori}\n";
+        $message .= "📢 **Judul:** {$complaint->judul}\n";
+        $message .= "🎯 **Prioritas:** {$complaint->prioritas}\n";
+        $message .= "📍 **Status:** {$complaint->status}\n\n";
+        $message .= "📝 **Deskripsi Pengaduan:**\n";
+        $message .= "{$complaint->deskripsi}\n\n";
+        
+        // Add department info
+        if (isset($departmentInfo['department_name'])) {
+            $message .= "🏛️ **Diteruskan ke:** {$departmentInfo['department_name']}\n";
+        }
+        
+        if (isset($departmentInfo['contact_person'])) {
+            $message .= "👤 **PIC:** {$departmentInfo['contact_person']}\n";
+        }
+        
+        $message .= "\n⏰ **Waktu Forward:** " . now()->format('d/m/Y H:i:s') . "\n";
+        $message .= "🔗 **System:** Volunteer Management System";
+
+        return $message;
     }
 }

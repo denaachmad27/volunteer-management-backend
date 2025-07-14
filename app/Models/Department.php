@@ -14,7 +14,7 @@ class Department extends Model
         'email',
         'whatsapp',
         'categories',
-        'is_active',
+        'is_active'
     ];
 
     protected $casts = [
@@ -41,6 +41,34 @@ class Department extends Model
     }
 
     /**
+     * Get formatted WhatsApp number
+     */
+    public function getFormattedWhatsappAttribute()
+    {
+        $number = preg_replace('/\D/', '', $this->whatsapp);
+        
+        if (strpos($number, '62') === 0) {
+            return $number;
+        }
+        
+        if (strpos($number, '0') === 0) {
+            return '62' . substr($number, 1);
+        }
+        
+        return '62' . $number;
+    }
+
+    /**
+     * Get categories as string
+     */
+    public function getCategoriesStringAttribute()
+    {
+        return is_array($this->categories) 
+            ? implode(', ', $this->categories) 
+            : '';
+    }
+
+    /**
      * Get all active departments with their categories
      */
     public static function getActiveWithCategories()
@@ -52,10 +80,15 @@ class Department extends Model
                 return [
                     'id' => $department->id,
                     'name' => $department->name,
+                    'address' => $department->address,
                     'email' => $department->email,
                     'whatsapp' => $department->whatsapp,
+                    'formatted_whatsapp' => $department->formatted_whatsapp,
+                    'contact_person' => $department->contact_person,
                     'categories' => $department->categories ?? [],
+                    'categories_string' => $department->categories_string,
                     'is_active' => $department->is_active,
+                    'description' => $department->description,
                 ];
             });
     }

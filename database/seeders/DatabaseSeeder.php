@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             BantuanSosialSeeder::class,
             NewsSeeder::class,
+            WhatsappSettingsSeeder::class,
         ]);
 
         $this->command->info('All seeders completed successfully!');
