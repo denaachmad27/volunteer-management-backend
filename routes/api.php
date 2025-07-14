@@ -13,6 +13,8 @@ use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\ComplaintController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\EmailController;
+use App\Http\Controllers\Api\ForwardingSettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -150,6 +152,24 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Admin Dashboard Routes (untuk statistik umum)
         Route::prefix('dashboard')->group(function () {
             Route::get('statistics', [DashboardController::class, 'adminStatistics']);
+        });
+
+        // Admin Email Routes
+        Route::prefix('email')->group(function () {
+            Route::post('send-complaint', [EmailController::class, 'sendComplaintEmail']);
+            Route::post('send-test', [EmailController::class, 'sendTestEmail']);
+            Route::get('status', [EmailController::class, 'getEmailStatus']);
+        });
+
+        // Admin Forwarding Settings Routes
+        Route::prefix('forwarding')->group(function () {
+            Route::get('settings', [ForwardingSettingsController::class, 'getSettings']);
+            Route::put('settings', [ForwardingSettingsController::class, 'updateSettings']);
+            Route::get('departments', [ForwardingSettingsController::class, 'getDepartments']);
+            Route::post('departments', [ForwardingSettingsController::class, 'createDepartment']);
+            Route::put('departments/{id}', [ForwardingSettingsController::class, 'updateDepartment']);
+            Route::delete('departments/{id}', [ForwardingSettingsController::class, 'deleteDepartment']);
+            Route::get('departments/category/{category}', [ForwardingSettingsController::class, 'getDepartmentByCategory']);
         });
     });
 });
