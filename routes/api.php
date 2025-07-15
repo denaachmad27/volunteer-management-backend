@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\EmailController;
 use App\Http\Controllers\Api\ForwardingSettingsController;
 use App\Http\Controllers\Api\WhatsappController;
 use App\Http\Controllers\Api\DepartmentController;
+use App\Http\Controllers\Api\GeneralSettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -195,6 +196,18 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::put('{id}', [DepartmentController::class, 'update']);
             Route::delete('{id}', [DepartmentController::class, 'destroy']);
             Route::patch('{id}/toggle-status', [DepartmentController::class, 'toggleStatus']);
+        });
+
+        // Admin General Settings Routes
+        Route::prefix('general')->group(function () {
+            Route::get('settings', [GeneralSettingsController::class, 'getSettings']);
+            Route::put('settings', [GeneralSettingsController::class, 'updateSettings']);
+            Route::post('settings', [GeneralSettingsController::class, 'updateSettings']); // Method spoofing support
+            Route::post('debug', [GeneralSettingsController::class, 'debugRequest']); // Debug endpoint
+            Route::get('debug-storage', [GeneralSettingsController::class, 'debugStorage']); // Storage debug
+            Route::post('logo', [GeneralSettingsController::class, 'uploadLogo']);
+            Route::delete('logo', [GeneralSettingsController::class, 'deleteLogo']);
+            Route::get('options', [GeneralSettingsController::class, 'getOptions']);
         });
     });
 });
