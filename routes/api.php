@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\ForwardingSettingsController;
 use App\Http\Controllers\Api\WhatsappController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\GeneralSettingsController;
+use App\Http\Controllers\VolunteerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -150,6 +151,28 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::delete('{id}', [UserController::class, 'destroy']);
             Route::patch('{id}/status', [UserController::class, 'updateStatus']);
             Route::post('bulk-action', [UserController::class, 'bulkAction']);
+        });
+
+        // Admin Family Management Routes
+        Route::prefix('families')->group(function () {
+            Route::get('/', [\App\Http\Controllers\FamilyController::class, 'index']);
+            Route::get('statistics', [\App\Http\Controllers\FamilyController::class, 'statistics']);
+            Route::post('/', [\App\Http\Controllers\FamilyController::class, 'store']);
+            Route::get('user/{userId}', [\App\Http\Controllers\FamilyController::class, 'getFamiliesByUser']);
+            Route::get('{id}', [\App\Http\Controllers\FamilyController::class, 'show']);
+            Route::put('{id}', [\App\Http\Controllers\FamilyController::class, 'update']);
+            Route::delete('{id}', [\App\Http\Controllers\FamilyController::class, 'destroy']);
+            Route::post('bulk-action', [\App\Http\Controllers\FamilyController::class, 'bulkAction']);
+        });
+
+        // Admin Volunteer Management Routes
+        Route::prefix('volunteers')->group(function () {
+            Route::get('/', [VolunteerController::class, 'index']);
+            Route::get('statistics', [VolunteerController::class, 'statistics']);
+            Route::get('incomplete-profiles', [VolunteerController::class, 'incompleteProfiles']);
+            Route::get('{id}', [VolunteerController::class, 'show']);
+            Route::patch('{id}/status', [VolunteerController::class, 'updateStatus']);
+            Route::delete('{id}', [VolunteerController::class, 'destroy']);
         });
 
         // Admin Dashboard Routes (untuk statistik umum)
