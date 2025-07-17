@@ -59,6 +59,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/', [ProfileController::class, 'show']);
         Route::post('/', [ProfileController::class, 'store']);
         Route::post('photo', [ProfileController::class, 'updatePhoto']);
+        Route::get('completion', [ProfileController::class, 'completion']);
     });
 
     // Family Routes

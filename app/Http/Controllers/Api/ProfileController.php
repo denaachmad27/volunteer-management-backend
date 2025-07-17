@@ -134,4 +134,40 @@ class ProfileController extends Controller
             'data' => $profile
         ]);
     }
+
+    /**
+     * Get profile completion status
+     */
+    public function completion(Request $request)
+    {
+        $user = $request->user();
+        
+        // Load relationships
+        $user->load(['profile', 'families', 'economic', 'social']);
+        
+        // Calculate completion status
+        $sections = [
+            'profile' => $user->profile ? true : false,
+            'family' => $user->families->count() > 0,
+            'economic' => $user->economic ? true : false,
+            'social' => $user->social ? true : false,
+        ];
+
+        $completedSections = array_filter($sections);
+        $totalSections = count($sections);
+        $completedCount = count($completedSections);
+        $percentage = $totalSections > 0 ? round(($completedCount / $totalSections) * 100, 2) : 0;
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Profile completion status retrieved successfully',
+            'data' => [
+                'sections' => $sections,
+                'completed_count' => $completedCount,
+                'total_count' => $totalSections,
+                'percentage' => $percentage,
+                'is_complete' => $percentage === 100.0
+            ]
+        ]);
+    }
 }
