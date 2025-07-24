@@ -18,6 +18,7 @@ class User extends Authenticatable
         'role',
         'phone',
         'is_active',
+        'anggota_legislatif_id',
     ];
 
     protected $hidden = [
@@ -65,6 +66,11 @@ class User extends Authenticatable
     public function createdNews()
     {
         return $this->hasMany(News::class, 'created_by');
+    }
+
+    public function anggotaLegislatif()
+    {
+        return $this->belongsTo(AnggotaLegislatif::class);
     }
 
     // Helper methods

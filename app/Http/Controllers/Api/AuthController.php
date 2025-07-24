@@ -21,6 +21,7 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'phone' => 'nullable|string|max:15',
+            'anggota_legislatif_id' => 'required|exists:anggota_legislatifs,id',
         ]);
 
         if ($validator->fails()) {
@@ -36,6 +37,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'phone' => $request->phone,
+            'anggota_legislatif_id' => $request->anggota_legislatif_id,
             'role' => 'user', // Default role untuk user biasa
         ]);
 

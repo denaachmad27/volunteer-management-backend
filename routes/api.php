@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\ForwardingSettingsController;
 use App\Http\Controllers\Api\WhatsappController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\GeneralSettingsController;
+use App\Http\Controllers\Api\AnggotaLegislatifController;
 use App\Http\Controllers\VolunteerController;
 
 /*
@@ -31,6 +32,9 @@ Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
 });
+
+// Public Anggota Legislatif Routes (untuk dropdown registrasi)
+Route::get('anggota-legislatif/options', [AnggotaLegislatifController::class, 'options']);
 
 // Public News Routes (bisa diakses tanpa login)
 Route::prefix('news')->group(function () {
@@ -174,6 +178,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::get('{id}', [VolunteerController::class, 'show']);
             Route::patch('{id}/status', [VolunteerController::class, 'updateStatus']);
             Route::delete('{id}', [VolunteerController::class, 'destroy']);
+        });
+
+        // Admin Anggota Legislatif Management Routes
+        Route::prefix('anggota-legislatif')->group(function () {
+            Route::get('/', [AnggotaLegislatifController::class, 'index']);
+            Route::get('statistics', [AnggotaLegislatifController::class, 'statistics']);
+            Route::get('options', [AnggotaLegislatifController::class, 'options']);
+            Route::post('/', [AnggotaLegislatifController::class, 'store']);
+            Route::get('{id}', [AnggotaLegislatifController::class, 'show']);
+            Route::put('{id}', [AnggotaLegislatifController::class, 'update']);
+            Route::delete('{id}', [AnggotaLegislatifController::class, 'destroy']);
         });
 
         // Admin Dashboard Routes (untuk statistik umum)
