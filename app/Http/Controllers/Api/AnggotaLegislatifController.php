@@ -239,9 +239,20 @@ class AnggotaLegislatifController extends Controller
     public function show($id): JsonResponse
     {
         try {
-            $anggotaLegislatif = AnggotaLegislatif::with(['volunteers' => function ($query) {
-                $query->with('profile')->orderBy('created_at', 'desc');
-            }])->findOrFail($id);
+            // Check if this is an admin request (has authorization header)
+            $isAdmin = request()->hasHeader('Authorization');
+            
+            if ($isAdmin) {
+                // Admin can see volunteers data
+                $anggotaLegislatif = AnggotaLegislatif::with(['volunteers' => function ($query) {
+                    $query->with('profile')->orderBy('created_at', 'desc');
+                }])->findOrFail($id);
+            } else {
+                // Public access - no volunteers data
+                $anggotaLegislatif = AnggotaLegislatif::findOrFail($id);
+                // Add volunteer count without showing sensitive data
+                $anggotaLegislatif->volunteers_count = $anggotaLegislatif->volunteers()->count();
+            }
 
             return response()->json([
                 'status' => 'success',
@@ -372,7 +383,7 @@ class AnggotaLegislatifController extends Controller
     {
         try {
             $options = AnggotaLegislatif::where('status', 'Aktif')
-                                     ->select('id', 'kode_aleg', 'nama_lengkap', 'jabatan_saat_ini')
+                                     ->select('id', 'kode_aleg', 'nama_lengkap', 'jabatan_saat_ini', 'foto_profil')
                                      ->orderBy('nama_lengkap')
                                      ->get();
 

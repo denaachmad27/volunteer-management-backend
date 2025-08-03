@@ -33,8 +33,9 @@ Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
 });
 
-// Public Anggota Legislatif Routes (untuk dropdown registrasi)
+// Public Anggota Legislatif Routes (untuk dropdown registrasi dan detail profil)
 Route::get('anggota-legislatif/options', [AnggotaLegislatifController::class, 'options']);
+Route::get('anggota-legislatif/{id}', [AnggotaLegislatifController::class, 'show']);
 
 // Public News Routes (bisa diakses tanpa login)
 Route::prefix('news')->group(function () {
