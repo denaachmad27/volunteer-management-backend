@@ -57,6 +57,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me', [AuthController::class, 'me']);
         Route::post('refresh', [AuthController::class, 'refresh']);
+        Route::get('my-legislative-member', [AuthController::class, 'getUserLegislativeMember']);
     });
 
     // Profile Routes

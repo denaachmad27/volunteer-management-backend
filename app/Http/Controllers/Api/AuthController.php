@@ -153,4 +153,42 @@ class AuthController extends Controller
             ]
         ]);
     }
+
+    /**
+     * Get user's selected anggota legislatif
+     */
+    public function getUserLegislativeMember(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            if (!$user->anggota_legislatif_id) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User has no associated legislative member'
+                ], 404);
+            }
+
+            $anggotaLegislatif = $user->anggotaLegislatif;
+            
+            if (!$anggotaLegislatif) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Legislative member not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'User legislative member retrieved successfully',
+                'data' => $anggotaLegislatif
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to retrieve user legislative member',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
