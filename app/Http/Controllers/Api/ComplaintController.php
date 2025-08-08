@@ -76,8 +76,11 @@ class ComplaintController extends Controller
             $imagePath = $image->storeAs('complaint_images', $filename, 'public');
         }
 
+        $user = $request->user();
+        
         $complaint = Complaint::create([
-            'user_id' => $request->user()->id,
+            'user_id' => $user->id,
+            'anggota_legislatif_id' => $user->anggota_legislatif_id, // Set berdasarkan pilihan user saat pendaftaran
             'judul' => $request->judul,
             'kategori' => $request->kategori,
             'deskripsi' => $request->deskripsi,
@@ -225,6 +228,14 @@ class ComplaintController extends Controller
     {
         $query = Complaint::with('user');
 
+        // Filter berdasarkan role admin
+        $user = $request->user();
+        if ($user->isAdminAleg()) {
+            // Admin aleg hanya melihat aduan untuk aleg mereka
+            $query->byAnggotaLegislatif($user->anggota_legislatif_id);
+        }
+        // Super admin bisa melihat semua
+
         // Filter berdasarkan status
         if ($request->has('status')) {
             $query->where('status', $request->status);
@@ -285,12 +296,20 @@ class ComplaintController extends Controller
             ], 422);
         }
 
-        $complaint = Complaint::find($id);
+        $user = $request->user();
+        
+        // Build query berdasarkan role
+        $query = Complaint::where('id', $id);
+        if ($user->isAdminAleg()) {
+            $query->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+        }
+        
+        $complaint = $query->first();
 
         if (!$complaint) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Complaint not found'
+                'message' => 'Complaint not found or access denied'
             ], 404);
         }
 
@@ -319,23 +338,34 @@ class ComplaintController extends Controller
      */
     public function statistics(Request $request)
     {
+        $user = $request->user();
+        
+        // Base query berdasarkan role
+        $baseQuery = function() use ($user) {
+            $query = Complaint::query();
+            if ($user->isAdminAleg()) {
+                $query->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+            }
+            return $query;
+        };
+        
         $stats = [
-            'total_complaint' => Complaint::count(),
-            'baru' => Complaint::where('status', 'Baru')->count(),
-            'diproses' => Complaint::where('status', 'Diproses')->count(),
-            'selesai' => Complaint::where('status', 'Selesai')->count(),
-            'ditutup' => Complaint::where('status', 'Ditutup')->count(),
-            'rata_rata_rating' => round(Complaint::whereNotNull('rating')->avg('rating'), 2),
+            'total_complaint' => $baseQuery()->count(),
+            'baru' => $baseQuery()->where('status', 'Baru')->count(),
+            'diproses' => $baseQuery()->where('status', 'Diproses')->count(),
+            'selesai' => $baseQuery()->where('status', 'Selesai')->count(),
+            'ditutup' => $baseQuery()->where('status', 'Ditutup')->count(),
+            'rata_rata_rating' => round($baseQuery()->whereNotNull('rating')->avg('rating'), 2),
         ];
 
         // Statistik per kategori
-        $categoryStats = Complaint::selectRaw('kategori, count(*) as total')
+        $categoryStats = $baseQuery()->selectRaw('kategori, count(*) as total')
             ->groupBy('kategori')
             ->pluck('total', 'kategori')
             ->toArray();
 
         // Statistik per prioritas
-        $priorityStats = Complaint::selectRaw('prioritas, count(*) as total')
+        $priorityStats = $baseQuery()->selectRaw('prioritas, count(*) as total')
             ->groupBy('prioritas')
             ->pluck('total', 'prioritas')
             ->toArray();
@@ -347,10 +377,10 @@ class ComplaintController extends Controller
             $monthlyStats[] = [
                 'month' => $date->format('Y-m'),
                 'month_name' => $date->format('F Y'),
-                'total' => Complaint::whereYear('created_at', $date->year)
+                'total' => $baseQuery()->whereYear('created_at', $date->year)
                     ->whereMonth('created_at', $date->month)
                     ->count(),
-                'selesai' => Complaint::whereYear('created_at', $date->year)
+                'selesai' => $baseQuery()->whereYear('created_at', $date->year)
                     ->whereMonth('created_at', $date->month)
                     ->where('status', 'Selesai')
                     ->count(),

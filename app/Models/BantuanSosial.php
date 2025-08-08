@@ -21,6 +21,7 @@ class BantuanSosial extends Model
         'status',
         'syarat_bantuan',
         'dokumen_diperlukan',
+        'anggota_legislatif_id',
     ];
 
     protected $casts = [
@@ -33,6 +34,17 @@ class BantuanSosial extends Model
     public function pendaftarans()
     {
         return $this->hasMany(Pendaftaran::class);
+    }
+
+    public function anggotaLegislatif()
+    {
+        return $this->belongsTo(AnggotaLegislatif::class);
+    }
+
+    // Scopes
+    public function scopeByAnggotaLegislatif($query, $anggotaLegislatifId)
+    {
+        return $query->where('anggota_legislatif_id', $anggotaLegislatifId);
     }
 
     // Helper methods

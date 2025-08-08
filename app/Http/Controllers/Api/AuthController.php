@@ -94,6 +94,9 @@ class AuthController extends Controller
         // Buat token baru
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        // Load anggota legislatif data jika ada
+        $user->load('anggotaLegislatif');
+
         return response()->json([
             'status' => 'success',
             'message' => 'Login successful',

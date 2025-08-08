@@ -79,8 +79,23 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
+    public function isAdminAleg()
+    {
+        return $this->role === 'admin_aleg';
+    }
+
     public function isUser()
     {
         return $this->role === 'user';
+    }
+
+    public function isSuperAdmin()
+    {
+        return $this->role === 'admin';
+    }
+
+    public function canManageContent()
+    {
+        return in_array($this->role, ['admin', 'admin_aleg']);
     }
 }

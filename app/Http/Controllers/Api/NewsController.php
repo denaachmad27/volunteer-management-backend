@@ -18,6 +18,18 @@ class NewsController extends Controller
     {
         $query = News::published()->with('author');
 
+        // Filter berdasarkan aleg user (untuk user/volunteer)
+        $user = $request->user();
+        if ($user && $user->anggota_legislatif_id) {
+            $query->where(function ($q) use ($user) {
+                $q->where('anggota_legislatif_id', $user->anggota_legislatif_id)
+                  ->orWhereNull('anggota_legislatif_id'); // Konten umum (tanpa aleg spesifik)
+            });
+        } else {
+            // Jika user tidak punya aleg, hanya tampilkan konten umum
+            $query->whereNull('anggota_legislatif_id');
+        }
+
         // Filter berdasarkan kategori
         if ($request->has('kategori')) {
             $query->byCategory($request->kategori);
@@ -49,12 +61,22 @@ class NewsController extends Controller
     /**
      * Tampilkan detail berita
      */
-    public function show($slug)
+    public function show(Request $request, $slug)
     {
-        $news = News::where('slug', $slug)
-            ->published()
-            ->with('author')
-            ->first();
+        $query = News::where('slug', $slug)->published()->with('author');
+
+        // Filter berdasarkan aleg user
+        $user = $request->user();
+        if ($user && $user->anggota_legislatif_id) {
+            $query->where(function ($q) use ($user) {
+                $q->where('anggota_legislatif_id', $user->anggota_legislatif_id)
+                  ->orWhereNull('anggota_legislatif_id');
+            });
+        } else {
+            $query->whereNull('anggota_legislatif_id');
+        }
+
+        $news = $query->first();
 
         if (!$news) {
             return response()->json([
@@ -70,10 +92,21 @@ class NewsController extends Controller
         $news->reading_time = $news->getReadingTimeAttribute();
 
         // Berita terkait (kategori sama, exclude current)
-        $relatedNews = News::published()
+        $relatedQuery = News::published()
             ->where('kategori', $news->kategori)
-            ->where('id', '!=', $news->id)
-            ->orderBy('published_at', 'desc')
+            ->where('id', '!=', $news->id);
+
+        // Filter berita terkait berdasarkan aleg user
+        if ($user && $user->anggota_legislatif_id) {
+            $relatedQuery->where(function ($q) use ($user) {
+                $q->where('anggota_legislatif_id', $user->anggota_legislatif_id)
+                  ->orWhereNull('anggota_legislatif_id');
+            });
+        } else {
+            $relatedQuery->whereNull('anggota_legislatif_id');
+        }
+
+        $relatedNews = $relatedQuery->orderBy('published_at', 'desc')
             ->limit(3)
             ->get(['id', 'judul', 'slug', 'gambar_utama', 'published_at']);
 
@@ -92,6 +125,14 @@ class NewsController extends Controller
     public function adminIndex(Request $request)
     {
         $query = News::with('author');
+
+        // Filter berdasarkan role admin
+        $user = $request->user();
+        if ($user->isAdminAleg()) {
+            // Admin aleg hanya melihat konten untuk aleg mereka
+            $query->byAnggotaLegislatif($user->anggota_legislatif_id);
+        }
+        // Super admin bisa melihat semua
 
         // Filter berdasarkan status publish
         if ($request->has('is_published')) {
@@ -171,6 +212,12 @@ class NewsController extends Controller
         try {
             $data = $request->except(['gambar_utama']);
             $data['created_by'] = $request->user()->id;
+            
+            // Set anggota_legislatif_id untuk admin aleg
+            $user = $request->user();
+            if ($user->isAdminAleg()) {
+                $data['anggota_legislatif_id'] = $user->anggota_legislatif_id;
+            }
 
             // Handle boolean conversion untuk is_published
             $data['is_published'] = filter_var($request->input('is_published', false), FILTER_VALIDATE_BOOLEAN);
@@ -242,13 +289,21 @@ class NewsController extends Controller
             'user_id' => $request->user()?->id
         ]);
 
-        $news = News::find($id);
+        $user = $request->user();
+        
+        // Build query berdasarkan role
+        $query = News::where('id', $id);
+        if ($user->isAdminAleg()) {
+            $query->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+        }
+        
+        $news = $query->first();
 
         if (!$news) {
             \Log::error('News not found for update:', ['id' => $id]);
             return response()->json([
                 'status' => 'error',
-                'message' => 'News not found'
+                'message' => 'News not found or access denied'
             ], 404);
         }
 
@@ -343,14 +398,22 @@ class NewsController extends Controller
     /**
      * Hapus berita (Admin only)
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        $news = News::find($id);
+        $user = $request->user();
+        
+        // Build query berdasarkan role
+        $query = News::where('id', $id);
+        if ($user->isAdminAleg()) {
+            $query->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+        }
+        
+        $news = $query->first();
 
         if (!$news) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'News not found'
+                'message' => 'News not found or access denied'
             ], 404);
         }
 
@@ -370,14 +433,22 @@ class NewsController extends Controller
     /**
      * Toggle publish status
      */
-    public function togglePublish($id)
+    public function togglePublish(Request $request, $id)
     {
-        $news = News::find($id);
+        $user = $request->user();
+        
+        // Build query berdasarkan role
+        $query = News::where('id', $id);
+        if ($user->isAdminAleg()) {
+            $query->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+        }
+        
+        $news = $query->first();
 
         if (!$news) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'News not found'
+                'message' => 'News not found or access denied'
             ], 404);
         }
 

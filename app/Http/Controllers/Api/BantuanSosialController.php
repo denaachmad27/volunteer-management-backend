@@ -21,6 +21,18 @@ class BantuanSosialController extends Controller
               ->where('tanggal_mulai', '<=', now())
               ->where('tanggal_selesai', '>=', now());
 
+        // Filter berdasarkan aleg user (untuk user/volunteer)
+        $user = $request->user();
+        if ($user && $user->anggota_legislatif_id) {
+            $query->where(function ($q) use ($user) {
+                $q->where('anggota_legislatif_id', $user->anggota_legislatif_id)
+                  ->orWhereNull('anggota_legislatif_id'); // Bantuan umum
+            });
+        } else {
+            // Jika user tidak punya aleg, hanya tampilkan bantuan umum
+            $query->whereNull('anggota_legislatif_id');
+        }
+
         // Filter berdasarkan jenis bantuan
         if ($request->has('jenis_bantuan')) {
             $query->where('jenis_bantuan', $request->jenis_bantuan);
@@ -49,9 +61,22 @@ class BantuanSosialController extends Controller
     /**
      * Tampilkan detail bantuan sosial
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $bantuanSosial = BantuanSosial::find($id);
+        $query = BantuanSosial::where('id', $id);
+
+        // Filter berdasarkan aleg user
+        $user = $request->user();
+        if ($user && $user->anggota_legislatif_id) {
+            $query->where(function ($q) use ($user) {
+                $q->where('anggota_legislatif_id', $user->anggota_legislatif_id)
+                  ->orWhereNull('anggota_legislatif_id');
+            });
+        } else {
+            $query->whereNull('anggota_legislatif_id');
+        }
+
+        $bantuanSosial = $query->first();
 
         if (!$bantuanSosial) {
             return response()->json([
@@ -85,6 +110,14 @@ class BantuanSosialController extends Controller
     public function adminIndex(Request $request)
     {
         $query = BantuanSosial::query();
+
+        // Filter berdasarkan role admin
+        $user = $request->user();
+        if ($user->isAdminAleg()) {
+            // Admin aleg hanya melihat bantuan untuk aleg mereka
+            $query->byAnggotaLegislatif($user->anggota_legislatif_id);
+        }
+        // Super admin bisa melihat semua
 
         // Filter berdasarkan status
         if ($request->has('status')) {
@@ -145,7 +178,15 @@ class BantuanSosialController extends Controller
             ], 422);
         }
 
-        $bantuanSosial = BantuanSosial::create($request->all());
+        $data = $request->all();
+        
+        // Set anggota_legislatif_id untuk admin aleg
+        $user = $request->user();
+        if ($user->isAdminAleg()) {
+            $data['anggota_legislatif_id'] = $user->anggota_legislatif_id;
+        }
+
+        $bantuanSosial = BantuanSosial::create($data);
 
         return response()->json([
             'status' => 'success',
@@ -159,12 +200,20 @@ class BantuanSosialController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $bantuanSosial = BantuanSosial::find($id);
+        $user = $request->user();
+        
+        // Build query berdasarkan role
+        $query = BantuanSosial::where('id', $id);
+        if ($user->isAdminAleg()) {
+            $query->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+        }
+        
+        $bantuanSosial = $query->first();
 
         if (!$bantuanSosial) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Bantuan sosial not found'
+                'message' => 'Bantuan sosial not found or access denied'
             ], 404);
         }
 
@@ -201,14 +250,22 @@ class BantuanSosialController extends Controller
     /**
      * Hapus bantuan sosial (Admin only)
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        $bantuanSosial = BantuanSosial::find($id);
+        $user = $request->user();
+        
+        // Build query berdasarkan role
+        $query = BantuanSosial::where('id', $id);
+        if ($user->isAdminAleg()) {
+            $query->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+        }
+        
+        $bantuanSosial = $query->first();
 
         if (!$bantuanSosial) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Bantuan sosial not found'
+                'message' => 'Bantuan sosial not found or access denied'
             ], 404);
         }
 

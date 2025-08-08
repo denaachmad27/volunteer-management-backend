@@ -6,10 +6,12 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class AdminMiddleware
+class SuperAdminMiddleware
 {
     /**
      * Handle an incoming request.
+     *
+     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -21,11 +23,11 @@ class AdminMiddleware
             ], 401);
         }
 
-        // Cek apakah user adalah admin atau admin_aleg
-        if (!in_array($request->user()->role, ['admin', 'admin_aleg'])) {
+        // Cek apakah user adalah super admin (hanya role 'admin')
+        if ($request->user()->role !== 'admin') {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Access denied. Admin role required.'
+                'message' => 'Access denied. Super Admin role required.'
             ], 403);
         }
 

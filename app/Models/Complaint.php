@@ -11,6 +11,7 @@ class Complaint extends Model
 
     protected $fillable = [
         'user_id',
+        'anggota_legislatif_id',
         'no_tiket',
         'judul',
         'kategori',
@@ -32,6 +33,17 @@ class Complaint extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function anggotaLegislatif()
+    {
+        return $this->belongsTo(AnggotaLegislatif::class);
+    }
+
+    // Scopes
+    public function scopeByAnggotaLegislatif($query, $anggotaLegislatifId)
+    {
+        return $query->where('anggota_legislatif_id', $anggotaLegislatifId);
     }
 
     // Auto generate no tiket

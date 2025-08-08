@@ -20,6 +20,7 @@ class News extends Model
         'published_at',
         'views',
         'created_by',
+        'anggota_legislatif_id',
     ];
 
     protected $casts = [
@@ -31,6 +32,11 @@ class News extends Model
     public function author()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function anggotaLegislatif()
+    {
+        return $this->belongsTo(AnggotaLegislatif::class);
     }
 
     // Auto generate slug
@@ -62,6 +68,11 @@ class News extends Model
     public function scopeByCategory($query, $category)
     {
         return $query->where('kategori', $category);
+    }
+
+    public function scopeByAnggotaLegislatif($query, $anggotaLegislatifId)
+    {
+        return $query->where('anggota_legislatif_id', $anggotaLegislatifId);
     }
 
     // Helper methods
