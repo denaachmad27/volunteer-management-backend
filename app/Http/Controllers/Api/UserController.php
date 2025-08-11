@@ -18,6 +18,12 @@ class UserController extends Controller
     {
         $query = User::query();
 
+        // Scope by aleg for admin_aleg
+        $authUser = $request->user();
+        if (method_exists($authUser, 'isAdminAleg') && $authUser->isAdminAleg() && $authUser->anggota_legislatif_id) {
+            $query->where('anggota_legislatif_id', $authUser->anggota_legislatif_id);
+        }
+
         // Filter by role
         if ($request->has('role') && $request->role !== 'all') {
             $query->where('role', $request->role);
@@ -52,17 +58,26 @@ class UserController extends Controller
     /**
      * Get user statistics
      */
-    public function statistics()
+    public function statistics(Request $request)
     {
+        $baseQuery = User::query();
+
+        // Scope by aleg for admin_aleg
+        $authUser = $request->user();
+        if (method_exists($authUser, 'isAdminAleg') && $authUser->isAdminAleg() && $authUser->anggota_legislatif_id) {
+            $baseQuery->where('anggota_legislatif_id', $authUser->anggota_legislatif_id);
+        }
+
         $stats = [
-            'total' => User::count(),
-            'active' => User::where('is_active', true)->count(),
-            'inactive' => User::where('is_active', false)->count(),
-            'admins' => User::where('role', 'admin')->count(),
-            'staff' => User::where('role', 'staff')->count(),
-            'users' => User::where('role', 'user')->count(),
-            'recent_registrations' => User::where('created_at', '>=', now()->subDays(7))->count(),
-            'recent_logins' => User::where('updated_at', '>=', now()->subDays(7))->count(),
+            'total' => (clone $baseQuery)->count(),
+            'active' => (clone $baseQuery)->where('is_active', true)->count(),
+            'inactive' => (clone $baseQuery)->where('is_active', false)->count(),
+            // Count both super admin and admin_aleg under 'admins'
+            'admins' => (clone $baseQuery)->whereIn('role', ['admin', 'admin_aleg'])->count(),
+            'staff' => (clone $baseQuery)->where('role', 'staff')->count(),
+            'users' => (clone $baseQuery)->where('role', 'user')->count(),
+            'recent_registrations' => (clone $baseQuery)->where('created_at', '>=', now()->subDays(7))->count(),
+            'recent_logins' => (clone $baseQuery)->where('updated_at', '>=', now()->subDays(7))->count(),
         ];
 
         return response()->json([

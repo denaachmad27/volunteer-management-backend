@@ -17,39 +17,65 @@ class DashboardController extends Controller
      */
     public function adminStatistics(Request $request)
     {
-        // Basic counts
-        $totalUsers = User::count();
-        $totalNews = News::count();
-        $publishedNews = News::where('is_published', true)->count();
-        $totalComplaints = Complaint::count();
-        $totalApplications = Pendaftaran::count();
-        $totalPrograms = BantuanSosial::count();
+        $authUser = $request->user();
+        $isAdminAleg = method_exists($authUser, 'isAdminAleg') ? $authUser->isAdminAleg() : false;
+        $anggotaLegislatifId = $authUser->anggota_legislatif_id ?? null;
+
+        // Prepare base queries (filtered for admin_aleg)
+        $usersQuery = User::query();
+        $newsQuery = News::query();
+        $complaintsQuery = Complaint::query();
+        $applicationsQuery = Pendaftaran::query();
+        $programsQuery = BantuanSosial::query();
+
+        if ($isAdminAleg && $anggotaLegislatifId) {
+            $usersQuery->where('anggota_legislatif_id', $anggotaLegislatifId);
+            $newsQuery->where('anggota_legislatif_id', $anggotaLegislatifId);
+            $complaintsQuery->where('anggota_legislatif_id', $anggotaLegislatifId);
+            $applicationsQuery->whereHas('user', function($q) use ($anggotaLegislatifId) {
+                $q->where('anggota_legislatif_id', $anggotaLegislatifId);
+            });
+            $programsQuery->where('anggota_legislatif_id', $anggotaLegislatifId);
+        }
+
+        // Basic counts (apply filters above when admin_aleg)
+        $totalUsers = (clone $usersQuery)->count();
+        $totalNews = (clone $newsQuery)->count();
+        $publishedNews = (clone $newsQuery)->where('is_published', true)->count();
+        $totalComplaints = (clone $complaintsQuery)->count();
+        $totalApplications = (clone $applicationsQuery)->count();
+        $totalPrograms = (clone $programsQuery)->count();
 
         // User statistics
-        $activeUsers = User::where('is_active', true)->count();
-        $newUsersThisMonth = User::whereMonth('created_at', now()->month)
+        $activeUsers = (clone $usersQuery)->where('is_active', true)->count();
+        $newUsersThisMonth = (clone $usersQuery)
+            ->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->count();
 
         // Complaint statistics
-        $pendingComplaints = Complaint::where('status', 'Baru')->count();
-        $processedComplaints = Complaint::where('status', 'Diproses')->count();
-        $resolvedComplaints = Complaint::where('status', 'Selesai')->count();
+        $pendingComplaints = (clone $complaintsQuery)->where('status', 'Baru')->count();
+        $processedComplaints = (clone $complaintsQuery)->where('status', 'Diproses')->count();
+        $resolvedComplaints = (clone $complaintsQuery)->where('status', 'Selesai')->count();
 
         // Application statistics
-        $pendingApplications = Pendaftaran::where('status', 'Pending')->count();
-        $approvedApplications = Pendaftaran::where('status', 'Disetujui')->count();
-        $rejectedApplications = Pendaftaran::where('status', 'Ditolak')->count();
+        $pendingApplications = (clone $applicationsQuery)->where('status', 'Pending')->count();
+        $approvedApplications = (clone $applicationsQuery)->where('status', 'Disetujui')->count();
+        $rejectedApplications = (clone $applicationsQuery)->where('status', 'Ditolak')->count();
 
         // Program statistics
-        $activePrograms = BantuanSosial::where('status', 'Aktif')->count();
-        $completedPrograms = BantuanSosial::where('status', 'Selesai')->count();
+        $activePrograms = (clone $programsQuery)->where('status', 'Aktif')->count();
+        $completedPrograms = (clone $programsQuery)->where('status', 'Selesai')->count();
 
         // Recent activities (last 10)
         $recentActivities = collect();
 
         // Recent users
-        $recentUsers = User::latest()->take(3)->get(['id', 'name', 'created_at'])
+        $recentUsersQuery = User::query();
+        if ($isAdminAleg && $anggotaLegislatifId) {
+            $recentUsersQuery->where('anggota_legislatif_id', $anggotaLegislatifId);
+        }
+        $recentUsers = $recentUsersQuery->latest()->take(3)->get(['id', 'name', 'created_at'])
             ->map(function($user) {
                 return [
                     'type' => 'user',
@@ -61,7 +87,11 @@ class DashboardController extends Controller
             });
 
         // Recent complaints
-        $recentComplaints = Complaint::with('user')->latest()->take(3)->get()
+        $recentComplaintsQuery = Complaint::with('user');
+        if ($isAdminAleg && $anggotaLegislatifId) {
+            $recentComplaintsQuery->where('anggota_legislatif_id', $anggotaLegislatifId);
+        }
+        $recentComplaints = $recentComplaintsQuery->latest()->take(3)->get()
             ->map(function($complaint) {
                 return [
                     'type' => 'complaint',
@@ -73,7 +103,11 @@ class DashboardController extends Controller
             });
 
         // Recent news
-        $recentNews = News::where('is_published', true)->latest()->take(3)->get()
+        $recentNewsQuery = News::where('is_published', true);
+        if ($isAdminAleg && $anggotaLegislatifId) {
+            $recentNewsQuery->where('anggota_legislatif_id', $anggotaLegislatifId);
+        }
+        $recentNews = $recentNewsQuery->latest()->take(3)->get()
             ->map(function($news) {
                 return [
                     'type' => 'news',
@@ -85,7 +119,13 @@ class DashboardController extends Controller
             });
 
         // Recent applications
-        $recentApplications = Pendaftaran::with('user')->latest()->take(2)->get()
+        $recentApplicationsQuery = Pendaftaran::with('user');
+        if ($isAdminAleg && $anggotaLegislatifId) {
+            $recentApplicationsQuery->whereHas('user', function($q) use ($anggotaLegislatifId) {
+                $q->where('anggota_legislatif_id', $anggotaLegislatifId);
+            });
+        }
+        $recentApplications = $recentApplicationsQuery->latest()->take(2)->get()
             ->map(function($application) {
                 return [
                     'type' => 'application',
@@ -111,12 +151,18 @@ class DashboardController extends Controller
             $monthlyStats[] = [
                 'month' => $date->format('Y-m'),
                 'month_name' => $date->format('F Y'),
-                'users' => User::whereYear('created_at', $date->year)
-                    ->whereMonth('created_at', $date->month)->count(),
-                'complaints' => Complaint::whereYear('created_at', $date->year)
-                    ->whereMonth('created_at', $date->month)->count(),
-                'applications' => Pendaftaran::whereYear('created_at', $date->year)
-                    ->whereMonth('created_at', $date->month)->count(),
+                'users' => (clone $usersQuery)
+                    ->whereYear('created_at', $date->year)
+                    ->whereMonth('created_at', $date->month)
+                    ->count(),
+                'complaints' => (clone $complaintsQuery)
+                    ->whereYear('created_at', $date->year)
+                    ->whereMonth('created_at', $date->month)
+                    ->count(),
+                'applications' => (clone $applicationsQuery)
+                    ->whereYear('created_at', $date->year)
+                    ->whereMonth('created_at', $date->month)
+                    ->count(),
             ];
         }
 
