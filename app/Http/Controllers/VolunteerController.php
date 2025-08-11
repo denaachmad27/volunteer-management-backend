@@ -23,6 +23,12 @@ class VolunteerController extends Controller
             $query = User::with(['profile', 'families', 'economic', 'social'])
                          ->where('role', 'user'); // Only volunteers, not admins
 
+            // Scope by aleg for admin_aleg
+            $authUser = $request->user();
+            if (method_exists($authUser, 'isAdminAleg') && $authUser->isAdminAleg() && $authUser->anggota_legislatif_id) {
+                $query->where('anggota_legislatif_id', $authUser->anggota_legislatif_id);
+            }
+
             // Apply search filter
             if ($request->has('search') && !empty($request->search)) {
                 $search = $request->search;
@@ -107,26 +113,39 @@ class VolunteerController extends Controller
     /**
      * Get volunteer statistics
      */
-    public function statistics(): JsonResponse
+    public function statistics(Request $request): JsonResponse
     {
         try {
-            $totalVolunteers = User::where('role', 'user')->count();
-            $activeVolunteers = User::where('role', 'user')->where('is_active', true)->count();
-            $inactiveVolunteers = User::where('role', 'user')->where('is_active', false)->count();
+            $baseQuery = User::where('role', 'user');
+            // Scope by aleg for admin_aleg
+            $authUser = $request->user();
+            if (method_exists($authUser, 'isAdminAleg') && $authUser->isAdminAleg() && $authUser->anggota_legislatif_id) {
+                $baseQuery->where('anggota_legislatif_id', $authUser->anggota_legislatif_id);
+            }
+
+            $totalVolunteers = (clone $baseQuery)->count();
+            $activeVolunteers = (clone $baseQuery)->where('is_active', true)->count();
+            $inactiveVolunteers = (clone $baseQuery)->where('is_active', false)->count();
 
             // Profile completion statistics
-            $completeProfiles = User::where('role', 'user')
-                                  ->whereHas('profile')
-                                  ->whereHas('economic')
-                                  ->whereHas('social')
-                                  ->count();
+            $completeProfilesQuery = User::where('role', 'user')
+                                      ->whereHas('profile')
+                                      ->whereHas('economic')
+                                      ->whereHas('social');
+            if (isset($authUser) && method_exists($authUser, 'isAdminAleg') && $authUser->isAdminAleg() && $authUser->anggota_legislatif_id) {
+                $completeProfilesQuery->where('anggota_legislatif_id', $authUser->anggota_legislatif_id);
+            }
+            $completeProfiles = $completeProfilesQuery->count();
 
             $incompleteProfiles = $totalVolunteers - $completeProfiles;
 
             // Gender distribution
             $genderStats = Profile::select('jenis_kelamin', DB::raw('count(*) as count'))
-                                 ->whereHas('user', function ($q) {
+                                 ->whereHas('user', function ($q) use ($authUser) {
                                      $q->where('role', 'user');
+                                     if (isset($authUser) && method_exists($authUser, 'isAdminAleg') && $authUser->isAdminAleg() && $authUser->anggota_legislatif_id) {
+                                         $q->where('anggota_legislatif_id', $authUser->anggota_legislatif_id);
+                                     }
                                  })
                                  ->groupBy('jenis_kelamin')
                                  ->pluck('count', 'jenis_kelamin')
@@ -143,8 +162,11 @@ class VolunteerController extends Controller
                                 END as age_group,
                                 count(*) as count
                             ')
-                           ->whereHas('user', function ($q) {
+                           ->whereHas('user', function ($q) use ($authUser) {
                                $q->where('role', 'user');
+                               if (isset($authUser) && method_exists($authUser, 'isAdminAleg') && $authUser->isAdminAleg() && $authUser->anggota_legislatif_id) {
+                                   $q->where('anggota_legislatif_id', $authUser->anggota_legislatif_id);
+                               }
                            })
                            ->groupBy(DB::raw('age_group'))
                            ->pluck('count', 'age_group')
@@ -152,8 +174,11 @@ class VolunteerController extends Controller
 
             // City distribution (top 10)
             $cityStats = Profile::select('kota', DB::raw('count(*) as count'))
-                               ->whereHas('user', function ($q) {
+                               ->whereHas('user', function ($q) use ($authUser) {
                                    $q->where('role', 'user');
+                                   if (isset($authUser) && method_exists($authUser, 'isAdminAleg') && $authUser->isAdminAleg() && $authUser->anggota_legislatif_id) {
+                                       $q->where('anggota_legislatif_id', $authUser->anggota_legislatif_id);
+                                   }
                                })
                                ->groupBy('kota')
                                ->orderBy('count', 'desc')
@@ -170,8 +195,11 @@ class VolunteerController extends Controller
                                         END as status,
                                         count(*) as count
                                     ')
-                                  ->whereHas('user', function ($q) {
+                                  ->whereHas('user', function ($q) use ($authUser) {
                                       $q->where('role', 'user');
+                                      if (isset($authUser) && method_exists($authUser, 'isAdminAleg') && $authUser->isAdminAleg() && $authUser->anggota_legislatif_id) {
+                                          $q->where('anggota_legislatif_id', $authUser->anggota_legislatif_id);
+                                      }
                                   })
                                   ->groupBy(DB::raw('status'))
                                   ->pluck('count', 'status')
@@ -309,18 +337,25 @@ class VolunteerController extends Controller
     /**
      * Get volunteers with incomplete profiles
      */
-    public function incompleteProfiles(): JsonResponse
+    public function incompleteProfiles(Request $request): JsonResponse
     {
         try {
-            $volunteers = User::with(['profile', 'economic', 'social'])
+            $query = User::with(['profile', 'economic', 'social'])
                              ->where('role', 'user')
                              ->where(function ($q) {
                                  $q->whereDoesntHave('profile')
                                    ->orWhereDoesntHave('economic')
                                    ->orWhereDoesntHave('social');
                              })
-                             ->orderBy('created_at', 'desc')
-                             ->get();
+                             ->orderBy('created_at', 'desc');
+
+            // Scope by aleg for admin_aleg
+            $authUser = $request->user();
+            if (method_exists($authUser, 'isAdminAleg') && $authUser->isAdminAleg() && $authUser->anggota_legislatif_id) {
+                $query->where('anggota_legislatif_id', $authUser->anggota_legislatif_id);
+            }
+
+            $volunteers = $query->get();
 
             // Add completion details
             $volunteers->transform(function ($volunteer) {
