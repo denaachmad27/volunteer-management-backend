@@ -30,18 +30,19 @@ use App\Http\Controllers\VolunteerController;
 // Public Routes (tidak perlu login)
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
-    Route::post('login', [AuthController::class, 'login']);
+    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
+    Route::post('register', [AuthController::class, 'register'])->middleware('throttle:register');
 });
 
 // Public Anggota Legislatif Routes (untuk dropdown registrasi dan detail profil)
 Route::get('anggota-legislatif/options', [AnggotaLegislatifController::class, 'options']);
 Route::get('anggota-legislatif/{id}', [AnggotaLegislatifController::class, 'show']);
 
-// Public News Routes (bisa diakses tanpa login)
-Route::prefix('news')->group(function () {
-    Route::get('/', [NewsController::class, 'index']);
-    Route::get('{slug}', [NewsController::class, 'show']);
-});
+// Public News Routes - DISABLED: News now requires authentication for proper filtering
+// Route::prefix('news')->group(function () {
+//     Route::get('/', [NewsController::class, 'index']);
+//     Route::get('{slug}', [NewsController::class, 'show']);
+// });
 
 // Public Bantuan Sosial Routes (untuk melihat bantuan yang tersedia)
 Route::prefix('bantuan-sosial')->group(function () {
@@ -100,6 +101,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('statistics', [PendaftaranController::class, 'statistics']);
         Route::get('{id}', [PendaftaranController::class, 'show']);
         Route::get('{id}/dokumen/{index}', [PendaftaranController::class, 'downloadDokumen']);
+    });
+
+    // News Routes (untuk user authenticated - filtered by aleg)
+    Route::prefix('news')->group(function () {
+        Route::get('/', [NewsController::class, 'index']);
+        Route::get('{slug}', [NewsController::class, 'show']);
     });
 
     // Complaint Routes (untuk user)

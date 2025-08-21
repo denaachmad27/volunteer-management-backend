@@ -1,0 +1,10 @@
+﻿ID,Nama,Email,Telepon,Status,"Tanggal Daftar",NIK,"Nama Lengkap","Jenis Kelamin","Tempat Lahir","Tanggal Lahir",Alamat,Kelurahan,Kecamatan,Kota,Provinsi,"Kode Pos",Agama,"Status Pernikahan",Pendidikan,Pekerjaan,"Penghasilan Bulanan","Pengeluaran Bulanan","Status Rumah","Jenis Rumah","Punya Kendaraan","Jenis Kendaraan","Punya Tabungan","Jumlah Tabungan","Punya Hutang","Jumlah Hutang","Sumber Penghasilan Lain",Organisasi,"Jabatan Organisasi","Aktif Kegiatan Sosial","Jenis Kegiatan Sosial","Pernah Dapat Bantuan","Jenis Bantuan Diterima","Tanggal Bantuan Terakhir","Keahlian Khusus","Minat Kegiatan","Ketersediaan Waktu","Anggota Legislatif","Partai Politik","Jumlah Anggota Keluarga"
+1,"Admin Volunteer",admin@volunteer.com,081234567890,Aktif,20/06/2025,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0
+2,"Budi Santoso",budi@example.com,081234567891,Aktif,20/06/2025,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0
+3,"Sari Dewi",sari@example.com,081234567892,Aktif,20/06/2025,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0
+4,"Ahmad Rahman",ahmad@example.com,081234567893,Aktif,20/06/2025,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0
+5,"Test User",test@example.com,081234567890,Aktif,23/06/2025,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0
+7,shazya,shazya@mail.com,085624560248,Aktif,03/07/2025,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,0
+8,"Asep Berlian",asep@mail.com,081267851234,Aktif,04/07/2025,3217082702930008,"Asep Berlian Mulyana",Laki-laki,Cipadung,09/07/1998,"Jalan Pamitran I No 38","Cipadung Kulon",Panyileukan,"Kota Bandung","Jawa Barat",4614,Islam,Menikah,S1,"Karyawan Swasta",3000000.00,4000000.00,Sewa,"Rumah Permanen",Ya,Motor,Tidak,,Ya,1000000.00,,"BPBD Kota Bandung",Relawan,Ya,"Relawan Bencana",Tidak,,,"Menyetir mobil","Kegiatan Teknologi",Weekend,,,2
+9,"Budi Gunawan",budi@gmail.com,0813214564545,Aktif,06/08/2025,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"H. Asep Mulyadi, S.H.",PKS,0
+13,"Tresno Hadi",tresno@mail.com,081321734999,Aktif,14/08/2025,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"H. AGUS ANDI SETYAWAN, S.Pd.I",PKS,0

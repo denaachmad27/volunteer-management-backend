@@ -73,8 +73,8 @@ class ProfileController extends Controller
             }
 
             $file = $request->file('foto_profil');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $path = $file->storeAs('profile_photos', $filename, 'public');
+            // Simpan dengan nama hash acak
+            $path = $file->store('profile_photos', 'public');
             $data['foto_profil'] = $path;
         }
 
@@ -123,8 +123,7 @@ class ProfileController extends Controller
 
         // Upload foto baru
         $file = $request->file('foto_profil');
-        $filename = time() . '_' . $file->getClientOriginalName();
-        $path = $file->storeAs('profile_photos', $filename, 'public');
+        $path = $file->store('profile_photos', 'public');
 
         $profile->update(['foto_profil' => $path]);
 

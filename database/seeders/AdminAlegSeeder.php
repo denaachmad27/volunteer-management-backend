@@ -35,33 +35,44 @@ class AdminAlegSeeder extends Seeder
         if ($anggotaLegislatifs->count() < 2) {
             // Jika belum ada anggota legislatif, buat dulu
             $aleg1 = AnggotaLegislatif::updateOrCreate(
-                ['nama' => 'Andri Rusmana'],
+                ['nama_lengkap' => 'Andri Rusmana'],
                 [
-                    'nama' => 'Andri Rusmana',
-                    'partai' => 'Partai Demokrasi Indonesia Perjuangan',
-                    'dapil' => 'Dapil I Bandung',
-                    'periode' => '2024-2029',
-                    'foto' => null,
-                    'deskripsi' => 'Anggota Legislatif yang berfokus pada pembangunan infrastruktur dan kesejahteraan masyarakat.',
-                    'is_active' => true,
+                    'kode_aleg' => 'AL001',
+                    'nama_lengkap' => 'Andri Rusmana',
+                    'jenis_kelamin' => 'Laki-laki',
+                    'partai_politik' => 'Partai Demokrasi Indonesia Perjuangan',
+                    'daerah_pemilihan' => 'Dapil I Bandung',
+                    'status' => 'Aktif',
                 ]
             );
 
             $aleg2 = AnggotaLegislatif::updateOrCreate(
-                ['nama' => 'Asep Mulyadi'],
+                ['nama_lengkap' => 'Asep Mulyadi'],
                 [
-                    'nama' => 'Asep Mulyadi',
-                    'partai' => 'Partai Golongan Karya',
-                    'dapil' => 'Dapil II Bandung',
-                    'periode' => '2024-2029',
-                    'foto' => null,
-                    'deskripsi' => 'Anggota Legislatif yang mengutamakan pendidikan dan ekonomi kerakyatan.',
-                    'is_active' => true,
+                    'kode_aleg' => 'AL002',
+                    'nama_lengkap' => 'Asep Mulyadi',
+                    'jenis_kelamin' => 'Laki-laki',
+                    'partai_politik' => 'Partai Golongan Karya',
+                    'daerah_pemilihan' => 'Dapil II Bandung',
+                    'status' => 'Aktif',
+                ]
+            );
+
+            $aleg3 = AnggotaLegislatif::updateOrCreate(
+                ['nama_lengkap' => 'Agus Andi'],
+                [
+                    'kode_aleg' => 'AL003',
+                    'nama_lengkap' => 'Agus Andi',
+                    'jenis_kelamin' => 'Laki-laki',
+                    'partai_politik' => 'Partai Keadilan Sejahtera',
+                    'daerah_pemilihan' => 'Dapil III Bandung',
+                    'status' => 'Aktif',
                 ]
             );
         } else {
             $aleg1 = $anggotaLegislatifs->first();
             $aleg2 = $anggotaLegislatifs->skip(1)->first() ?: $anggotaLegislatifs->first();
+            $aleg3 = $anggotaLegislatifs->where('nama_lengkap', 'Agus Andi')->first() ?: $anggotaLegislatifs->first();
         }
 
         // Buat Admin untuk Andri Rusmana
@@ -92,6 +103,20 @@ class AdminAlegSeeder extends Seeder
             ]
         );
 
+        // Buat Admin untuk Agus Andi
+        $adminAgus = User::updateOrCreate(
+            ['email' => 'admin.agus@volunteer.com'],
+            [
+                'name' => 'Admin Agus Andi',
+                'email' => 'admin.agus@volunteer.com',
+                'password' => Hash::make('AdminAgus123!'),
+                'phone' => '08456789012',
+                'role' => 'admin_aleg',
+                'is_active' => true,
+                'anggota_legislatif_id' => $aleg3->id,
+            ]
+        );
+
         $this->command->info('✅ Users berhasil dibuat:');
         $this->command->line('');
         $this->command->info('🔐 SUPER ADMIN:');
@@ -108,6 +133,11 @@ class AdminAlegSeeder extends Seeder
         $this->command->line('Email: admin.asep@volunteer.com');
         $this->command->line('Password: AdminAsep123!');
         $this->command->line('Role: Admin Aleg (hanya konten Asep Mulyadi)');
+        $this->command->line('');
+        $this->command->info('👤 ADMIN ALEG - Agus Andi:');
+        $this->command->line('Email: admin.agus@volunteer.com');
+        $this->command->line('Password: AdminAgus123!');
+        $this->command->line('Role: Admin Aleg (hanya konten Agus Andi)');
         $this->command->line('');
         $this->command->warn('⚠️  PENTING: Simpan kredensial ini dengan aman!');
     }

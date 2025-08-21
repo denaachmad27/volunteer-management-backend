@@ -1,0 +1,273 @@
+[
+    {
+        "basic_info": {
+            "id": 1,
+            "name": "Admin Volunteer",
+            "email": "admin@volunteer.com",
+            "phone": "081234567890",
+            "is_active": true,
+            "created_at": "2025-06-20T17:04:17.000000Z"
+        },
+        "profile": null,
+        "economic": null,
+        "social": null,
+        "legislative_member": null,
+        "families": [],
+        "family_count": 0
+    },
+    {
+        "basic_info": {
+            "id": 2,
+            "name": "Budi Santoso",
+            "email": "budi@example.com",
+            "phone": "081234567891",
+            "is_active": true,
+            "created_at": "2025-06-20T17:04:17.000000Z"
+        },
+        "profile": null,
+        "economic": null,
+        "social": null,
+        "legislative_member": null,
+        "families": [],
+        "family_count": 0
+    },
+    {
+        "basic_info": {
+            "id": 3,
+            "name": "Sari Dewi",
+            "email": "sari@example.com",
+            "phone": "081234567892",
+            "is_active": true,
+            "created_at": "2025-06-20T17:04:17.000000Z"
+        },
+        "profile": null,
+        "economic": null,
+        "social": null,
+        "legislative_member": null,
+        "families": [],
+        "family_count": 0
+    },
+    {
+        "basic_info": {
+            "id": 4,
+            "name": "Ahmad Rahman",
+            "email": "ahmad@example.com",
+            "phone": "081234567893",
+            "is_active": true,
+            "created_at": "2025-06-20T17:04:17.000000Z"
+        },
+        "profile": null,
+        "economic": null,
+        "social": null,
+        "legislative_member": null,
+        "families": [],
+        "family_count": 0
+    },
+    {
+        "basic_info": {
+            "id": 5,
+            "name": "Test User",
+            "email": "test@example.com",
+            "phone": "081234567890",
+            "is_active": true,
+            "created_at": "2025-06-23T06:54:40.000000Z"
+        },
+        "profile": null,
+        "economic": null,
+        "social": null,
+        "legislative_member": null,
+        "families": [],
+        "family_count": 0
+    },
+    {
+        "basic_info": {
+            "id": 7,
+            "name": "shazya",
+            "email": "shazya@mail.com",
+            "phone": "085624560248",
+            "is_active": true,
+            "created_at": "2025-07-03T07:43:38.000000Z"
+        },
+        "profile": null,
+        "economic": null,
+        "social": null,
+        "legislative_member": null,
+        "families": [],
+        "family_count": 0
+    },
+    {
+        "basic_info": {
+            "id": 8,
+            "name": "Asep Berlian",
+            "email": "asep@mail.com",
+            "phone": "081267851234",
+            "is_active": true,
+            "created_at": "2025-07-04T09:09:15.000000Z"
+        },
+        "profile": {
+            "id": 1,
+            "user_id": 8,
+            "nik": "3217082702930008",
+            "nama_lengkap": "Asep Berlian Mulyana",
+            "jenis_kelamin": "Laki-laki",
+            "tempat_lahir": "Cipadung",
+            "tanggal_lahir": "1998-07-09T00:00:00.000000Z",
+            "alamat": "Jalan Pamitran I No 38",
+            "kelurahan": "Cipadung Kulon",
+            "kecamatan": "Panyileukan",
+            "kota": "Kota Bandung",
+            "provinsi": "Jawa Barat",
+            "kode_pos": "4614",
+            "agama": "Islam",
+            "status_pernikahan": "Menikah",
+            "pendidikan_terakhir": "S1",
+            "pekerjaan": "Karyawan Swasta",
+            "foto_profil": "profile_photos\/1752641268_scaled_35.jpg",
+            "created_at": "2025-07-16T04:47:47.000000Z",
+            "updated_at": "2025-07-16T04:47:48.000000Z"
+        },
+        "economic": {
+            "id": 1,
+            "user_id": 8,
+            "penghasilan_bulanan": "3000000.00",
+            "pengeluaran_bulanan": "4000000.00",
+            "status_rumah": "Sewa",
+            "jenis_rumah": "Rumah Permanen",
+            "punya_kendaraan": true,
+            "jenis_kendaraan": "Motor",
+            "punya_tabungan": false,
+            "jumlah_tabungan": null,
+            "punya_hutang": true,
+            "jumlah_hutang": "1000000.00",
+            "sumber_penghasilan_lain": null,
+            "created_at": "2025-07-16T05:11:09.000000Z",
+            "updated_at": "2025-07-16T06:50:23.000000Z"
+        },
+        "social": {
+            "id": 1,
+            "user_id": 8,
+            "organisasi": "BPBD Kota Bandung",
+            "jabatan_organisasi": "Relawan",
+            "aktif_kegiatan_sosial": true,
+            "jenis_kegiatan_sosial": "Relawan Bencana",
+            "pernah_dapat_bantuan": false,
+            "jenis_bantuan_diterima": null,
+            "tanggal_bantuan_terakhir": null,
+            "keahlian_khusus": "Menyetir mobil",
+            "minat_kegiatan": "Kegiatan Teknologi",
+            "ketersediaan_waktu": "Weekend",
+            "created_at": "2025-07-17T09:01:53.000000Z",
+            "updated_at": "2025-07-17T09:01:53.000000Z"
+        },
+        "legislative_member": null,
+        "families": [
+            {
+                "id": 1,
+                "user_id": 8,
+                "nama_anggota": "Nani",
+                "hubungan": "Istri",
+                "jenis_kelamin": "Perempuan",
+                "tanggal_lahir": "1984-01-16T00:00:00.000000Z",
+                "pekerjaan": "IRT",
+                "pendidikan": "S1",
+                "penghasilan": "0.00",
+                "tanggungan": true,
+                "created_at": "2025-07-15T15:41:18.000000Z",
+                "updated_at": "2025-07-15T15:41:18.000000Z"
+            },
+            {
+                "id": 2,
+                "user_id": 8,
+                "nama_anggota": "Nana",
+                "hubungan": "Anak",
+                "jenis_kelamin": "Perempuan",
+                "tanggal_lahir": "2005-06-22T00:00:00.000000Z",
+                "pekerjaan": "Pelajar",
+                "pendidikan": "SMA",
+                "penghasilan": "0.00",
+                "tanggungan": true,
+                "created_at": "2025-07-16T04:59:22.000000Z",
+                "updated_at": "2025-07-17T09:48:26.000000Z"
+            }
+        ],
+        "family_count": 2
+    },
+    {
+        "basic_info": {
+            "id": 9,
+            "name": "Budi Gunawan",
+            "email": "budi@gmail.com",
+            "phone": "0813214564545",
+            "is_active": true,
+            "created_at": "2025-08-06T08:14:01.000000Z"
+        },
+        "profile": null,
+        "economic": null,
+        "social": null,
+        "legislative_member": {
+            "id": 2,
+            "kode_aleg": "asmul",
+            "nama_lengkap": "H. Asep Mulyadi, S.H.",
+            "jenis_kelamin": "Laki-laki",
+            "tempat_lahir": "Ciamis",
+            "tanggal_lahir": "1971-07-25T00:00:00.000000Z",
+            "alamat": "JL. KARASAK UTARA I NO 2 B",
+            "kelurahan": "Karasak",
+            "kecamatan": "Astana Anyar",
+            "kota": "Bandung",
+            "provinsi": "Jawa Barat",
+            "kode_pos": "40614",
+            "no_telepon": "085674561267",
+            "email": "asepmulyadi@mail.com",
+            "jabatan_saat_ini": "Ketua DPRD Kota Bandung",
+            "partai_politik": "PKS",
+            "daerah_pemilihan": "Bandung 5",
+            "riwayat_jabatan": null,
+            "foto_profil": "anggota_legislatif\/1754039568_asep-mulyadi-resmi.jpg",
+            "status": "Aktif",
+            "created_at": "2025-08-01T09:12:48.000000Z",
+            "updated_at": "2025-08-01T09:12:48.000000Z"
+        },
+        "families": [],
+        "family_count": 0
+    },
+    {
+        "basic_info": {
+            "id": 13,
+            "name": "Tresno Hadi",
+            "email": "tresno@mail.com",
+            "phone": "081321734999",
+            "is_active": true,
+            "created_at": "2025-08-14T09:13:53.000000Z"
+        },
+        "profile": null,
+        "economic": null,
+        "social": null,
+        "legislative_member": {
+            "id": 3,
+            "kode_aleg": "agusandi",
+            "nama_lengkap": "H. AGUS ANDI SETYAWAN, S.Pd.I",
+            "jenis_kelamin": "Laki-laki",
+            "tempat_lahir": "Bandung",
+            "tanggal_lahir": "1972-06-06T00:00:00.000000Z",
+            "alamat": "KOMP. BANDUNG INDAH RAYA A-1 NO 2",
+            "kelurahan": "Mekarsari",
+            "kecamatan": "Rancasari",
+            "kota": "Bandung",
+            "provinsi": "Jawa Barat",
+            "kode_pos": "40614",
+            "no_telepon": "0812347654",
+            "email": "andiagus@mail.com",
+            "jabatan_saat_ini": "Wakil Ketua Komisi III",
+            "partai_politik": "PKS",
+            "daerah_pemilihan": "Bandung 2",
+            "riwayat_jabatan": null,
+            "foto_profil": "anggota_legislatif\/N3isTJQ9rgzy5npErt2z9Ky00e6YRksakrDRxTSY.jpg",
+            "status": "Aktif",
+            "created_at": "2025-08-14T09:12:54.000000Z",
+            "updated_at": "2025-08-14T09:12:54.000000Z"
+        },
+        "families": [],
+        "family_count": 0
+    }
+]

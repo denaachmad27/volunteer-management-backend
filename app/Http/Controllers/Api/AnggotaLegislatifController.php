@@ -211,8 +211,8 @@ class AnggotaLegislatifController extends Controller
             // Handle file upload
             if ($request->hasFile('foto_profil')) {
                 $file = $request->file('foto_profil');
-                $filename = time() . '_' . $file->getClientOriginalName();
-                $path = $file->storeAs('anggota_legislatif', $filename, 'public');
+                // Simpan dengan nama hash acak untuk menghindari info leak
+                $path = $file->store('anggota_legislatif', 'public');
                 $data['foto_profil'] = $path;
             }
 
@@ -236,22 +236,24 @@ class AnggotaLegislatifController extends Controller
     /**
      * Display the specified anggota legislatif
      */
-    public function show($id): JsonResponse
+    public function show(Request $request, $id): JsonResponse
     {
         try {
-            // Check if this is an admin request (has authorization header)
-            $isAdmin = request()->hasHeader('Authorization');
-            
+            // Validasi akses admin berdasarkan user & role, bukan sekadar header Authorization
+            $user = $request->user();
+            $isAdmin = $user && in_array($user->role, ['admin', 'admin_aleg']);
+
             if ($isAdmin) {
-                // Admin can see volunteers data
+                // Admin dapat melihat data volunteers terasosiasi
                 $anggotaLegislatif = AnggotaLegislatif::with(['volunteers' => function ($query) {
                     $query->with('profile')->orderBy('created_at', 'desc');
                 }])->findOrFail($id);
             } else {
-                // Public access - no volunteers data
+                // Akses publik: hanya data ALEG, tanpa daftar volunteer (hanya hitungannya)
                 $anggotaLegislatif = AnggotaLegislatif::findOrFail($id);
-                // Add volunteer count without showing sensitive data
                 $anggotaLegislatif->volunteers_count = $anggotaLegislatif->volunteers()->count();
+                // Hindari pemuatan relasi sensitif secara implisit
+                unset($anggotaLegislatif->volunteers);
             }
 
             return response()->json([
@@ -317,8 +319,7 @@ class AnggotaLegislatifController extends Controller
                 }
 
                 $file = $request->file('foto_profil');
-                $filename = time() . '_' . $file->getClientOriginalName();
-                $path = $file->storeAs('anggota_legislatif', $filename, 'public');
+                $path = $file->store('anggota_legislatif', 'public');
                 $data['foto_profil'] = $path;
             }
 

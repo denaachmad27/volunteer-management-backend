@@ -242,11 +242,10 @@ class NewsController extends Controller
                 $data['published_at'] = null;
             }
 
-            // Handle upload gambar
+            // Handle upload gambar (nama file di-hash)
             if ($request->hasFile('gambar_utama')) {
                 $file = $request->file('gambar_utama');
-                $filename = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('news_images', $filename, 'public');
+                $path = $file->store('news_images', 'public');
                 $data['gambar_utama'] = $path;
             }
 
@@ -355,7 +354,7 @@ class NewsController extends Controller
                 $data['published_at'] = null;
             }
 
-            // Handle upload gambar baru
+            // Handle upload gambar baru (nama file di-hash)
             if ($request->hasFile('gambar_utama')) {
                 // Hapus gambar lama
                 if ($news->gambar_utama) {
@@ -363,8 +362,7 @@ class NewsController extends Controller
                 }
 
                 $file = $request->file('gambar_utama');
-                $filename = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('news_images', $filename, 'public');
+                $path = $file->store('news_images', 'public');
                 $data['gambar_utama'] = $path;
             }
 

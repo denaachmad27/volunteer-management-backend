@@ -12,7 +12,10 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'], // Untuk development, production sebaiknya specific domain
+    // Gunakan env untuk mengatur origin di production (CSV), fallback ke * saat dev
+    'allowed_origins' => array_filter(
+        array_map('trim', explode(',', env('CORS_ALLOWED_ORIGINS', '*')))
+    ),
 
     'allowed_origins_patterns' => [],
 
@@ -22,6 +25,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => (bool) env('CORS_SUPPORTS_CREDENTIALS', false),
 
 ];
