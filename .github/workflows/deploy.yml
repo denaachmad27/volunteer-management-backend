@@ -1,0 +1,66 @@
+name: Deploy Backend to Production
+
+on:
+  push:
+    branches:
+      - main  # Ganti dengan branch Anda (main/master)
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/volunteer/volunteer-management-backend
+
+            echo "🚀 Starting Backend Deployment..."
+
+            # Pull latest changes
+            echo "📥 Pulling latest code..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Install dependencies
+            echo "📦 Installing Composer dependencies..."
+            composer install --no-dev --optimize-autoloader --no-interaction
+
+            # Run migrations
+            echo "🗄️  Running database migrations..."
+            php artisan migrate --force
+
+            # Clear and cache
+            echo "⚙️  Clearing and caching..."
+            php artisan config:clear
+            php artisan cache:clear
+            php artisan route:clear
+            php artisan view:clear
+
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+
+            # Set permissions
+            echo "🔐 Setting permissions..."
+            sudo chown -R www-data:www-data storage bootstrap/cache
+            sudo chmod -R 775 storage bootstrap/cache
+
+            echo "✅ Backend deployment completed successfully!"
+
+      - name: Notify on Success
+        if: success()
+        run: echo "✅ Deployment successful!"
+
+      - name: Notify on Failure
+        if: failure()
+        run: echo "❌ Deployment failed!"
