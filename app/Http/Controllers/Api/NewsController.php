@@ -198,6 +198,7 @@ class NewsController extends Controller
             'kategori' => 'required|in:Pengumuman,Kegiatan,Bantuan,Umum',
             'gambar_utama' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'is_published' => 'nullable|boolean',
+            'tags' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -212,7 +213,7 @@ class NewsController extends Controller
         try {
             $data = $request->except(['gambar_utama']);
             $data['created_by'] = $request->user()->id;
-            
+
             // Set anggota_legislatif_id untuk admin aleg
             $user = $request->user();
             if ($user->isAdminAleg()) {
@@ -221,6 +222,16 @@ class NewsController extends Controller
 
             // Handle boolean conversion untuk is_published
             $data['is_published'] = filter_var($request->input('is_published', false), FILTER_VALIDATE_BOOLEAN);
+
+            // Handle tags - convert JSON string to array
+            if ($request->has('tags')) {
+                $tags = $request->input('tags');
+                if (is_string($tags)) {
+                    $data['tags'] = json_decode($tags, true);
+                } else {
+                    $data['tags'] = $tags;
+                }
+            }
 
             // Generate slug jika tidak ada
             if (empty($data['slug'])) {
@@ -313,6 +324,7 @@ class NewsController extends Controller
             'kategori' => 'required|in:Pengumuman,Kegiatan,Bantuan,Umum',
             'gambar_utama' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'is_published' => 'nullable|boolean',
+            'tags' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -333,6 +345,16 @@ class NewsController extends Controller
 
             // Handle boolean conversion untuk is_published
             $data['is_published'] = filter_var($request->input('is_published', false), FILTER_VALIDATE_BOOLEAN);
+
+            // Handle tags - convert JSON string to array
+            if ($request->has('tags')) {
+                $tags = $request->input('tags');
+                if (is_string($tags)) {
+                    $data['tags'] = json_decode($tags, true);
+                } else {
+                    $data['tags'] = $tags;
+                }
+            }
 
             // Update slug jika judul berubah dan slug tidak diberikan
             if ($request->judul !== $news->judul && empty($data['slug'])) {

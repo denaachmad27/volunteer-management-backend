@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\WhatsappController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\GeneralSettingsController;
 use App\Http\Controllers\Api\AnggotaLegislatifController;
+use App\Http\Controllers\Api\RelawanController;
 use App\Http\Controllers\VolunteerController;
 
 /*
@@ -107,6 +108,18 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::prefix('news')->group(function () {
         Route::get('/', [NewsController::class, 'index']);
         Route::get('{slug}', [NewsController::class, 'show']);
+    });
+
+    // Aleg Dashboard (relawan + warga counts)
+    Route::prefix('dashboard')->group(function () {
+        Route::get('aleg', [DashboardController::class, 'alegStatistics']);
+    });
+
+    // Relawan endpoints (self-service)
+    Route::prefix('relawan')->group(function () {
+        Route::get('warga', [RelawanController::class, 'listWarga']);
+        Route::post('assign-warga', [RelawanController::class, 'assignWarga']);
+        Route::post('create-warga', [RelawanController::class, 'createWarga']);
     });
 
     // Complaint Routes (untuk user)

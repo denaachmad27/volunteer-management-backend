@@ -16,6 +16,7 @@ class News extends Model
         'konten',
         'gambar_utama',
         'kategori',
+        'tags',
         'is_published',
         'published_at',
         'views',
@@ -26,6 +27,7 @@ class News extends Model
     protected $casts = [
         'is_published' => 'boolean',
         'published_at' => 'datetime',
+        'tags' => 'array',
     ];
 
     // Relationships

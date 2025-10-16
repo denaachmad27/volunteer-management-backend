@@ -21,7 +21,8 @@ class VolunteerController extends Controller
     {
         try {
             $query = User::with(['profile', 'families', 'economic', 'social'])
-                         ->where('role', 'user'); // Only volunteers, not admins
+                         // Support both legacy 'user' and new 'relawan' roles
+                         ->whereIn('role', ['user', 'relawan']); // Only volunteers, not admins
 
             // Scope by aleg for admin_aleg
             $authUser = $request->user();
@@ -272,7 +273,7 @@ class VolunteerController extends Controller
     public function updateStatus(Request $request, $id): JsonResponse
     {
         try {
-            $volunteer = User::where('role', 'user')->findOrFail($id);
+            $volunteer = User::whereIn('role', ['user', 'relawan'])->findOrFail($id);
 
             $validator = Validator::make($request->all(), [
                 'is_active' => 'required|boolean'
@@ -309,7 +310,7 @@ class VolunteerController extends Controller
     public function destroy($id): JsonResponse
     {
         try {
-            $volunteer = User::where('role', 'user')->findOrFail($id);
+            $volunteer = User::whereIn('role', ['user', 'relawan'])->findOrFail($id);
             
             // Delete related data
             DB::transaction(function () use ($volunteer) {
@@ -341,7 +342,7 @@ class VolunteerController extends Controller
     {
         try {
             $query = User::with(['profile', 'economic', 'social'])
-                             ->where('role', 'user')
+                             ->whereIn('role', ['user', 'relawan'])
                              ->where(function ($q) {
                                  $q->whereDoesntHave('profile')
                                    ->orWhereDoesntHave('economic')

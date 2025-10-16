@@ -9,6 +9,7 @@ use App\Models\Complaint;
 use App\Models\Pendaftaran;
 use App\Models\BantuanSosial;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -189,6 +190,60 @@ class DashboardController extends Controller
                 ],
                 'recent_activities' => $recentActivities,
                 'monthly_stats' => $monthlyStats,
+            ]
+        ]);
+    }
+
+    /**
+     * Get Aleg dashboard statistics: total volunteers and total voters (warga)
+     */
+    public function alegStatistics(Request $request)
+    {
+        $authUser = $request->user();
+
+        // Allow both admin_aleg and aleg roles; require anggota_legislatif_id
+        $isAllowed = (method_exists($authUser, 'isAdminAleg') && $authUser->isAdminAleg())
+            || (method_exists($authUser, 'isAleg') && $authUser->isAleg());
+
+        if (!$isAllowed || empty($authUser->anggota_legislatif_id)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unauthorized or aleg not associated'
+            ], 403);
+        }
+
+        $alegId = $authUser->anggota_legislatif_id;
+
+        // Count volunteers (relawan)
+        $totalRelawan = DB::table('users')
+            ->where('anggota_legislatif_id', $alegId)
+            ->whereIn('role', ['user', 'relawan'])
+            ->count();
+
+        // Count voters (warga)
+        $totalWarga = DB::table('users')
+            ->where('anggota_legislatif_id', $alegId)
+            ->where('role', 'warga')
+            ->count();
+
+        // Breakdown voters per relawan (top 10)
+        $wargaPerRelawan = DB::table('users as w')
+            ->select('r.id as relawan_id', 'r.name as relawan_name', DB::raw('count(w.id) as total_warga'))
+            ->join('users as r', 'w.relawan_id', '=', 'r.id')
+            ->where('w.anggota_legislatif_id', $alegId)
+            ->where('w.role', 'warga')
+            ->whereIn('r.role', ['user', 'relawan'])
+            ->groupBy('r.id', 'r.name')
+            ->orderByDesc('total_warga')
+            ->limit(10)
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'total_relawan' => $totalRelawan,
+                'total_warga' => $totalWarga,
+                'warga_per_relawan' => $wargaPerRelawan,
             ]
         ]);
     }

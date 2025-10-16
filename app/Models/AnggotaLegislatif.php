@@ -44,7 +44,15 @@ class AnggotaLegislatif extends Model
 
     public function volunteers()
     {
-        return $this->hasMany(User::class, 'anggota_legislatif_id')->where('role', 'user');
+        // Support both legacy 'user' and new 'relawan' roles
+        return $this->hasMany(User::class, 'anggota_legislatif_id')
+                    ->whereIn('role', ['user', 'relawan']);
+    }
+
+    public function voters()
+    {
+        return $this->hasMany(User::class, 'anggota_legislatif_id')
+                    ->where('role', 'warga');
     }
 
     // Helper methods

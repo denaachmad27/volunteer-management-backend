@@ -73,6 +73,19 @@ class User extends Authenticatable
         return $this->belongsTo(AnggotaLegislatif::class);
     }
 
+    // New relationships for relawan-warga hierarchy
+    // For Relawan: list of warga under this relawan
+    public function warga()
+    {
+        return $this->hasMany(User::class, 'relawan_id')->where('role', 'warga');
+    }
+
+    // For Warga: the relawan who maintains this warga
+    public function relawan()
+    {
+        return $this->belongsTo(User::class, 'relawan_id');
+    }
+
     // Helper methods
     public function isAdmin()
     {
@@ -97,5 +110,22 @@ class User extends Authenticatable
     public function canManageContent()
     {
         return in_array($this->role, ['admin', 'admin_aleg']);
+    }
+
+    // New helper roles
+    public function isRelawan()
+    {
+        // Backward-compatible: treat existing 'user' as relawan
+        return in_array($this->role, ['relawan', 'user']);
+    }
+
+    public function isWarga()
+    {
+        return $this->role === 'warga';
+    }
+
+    public function isAleg()
+    {
+        return $this->role === 'aleg';
     }
 }
