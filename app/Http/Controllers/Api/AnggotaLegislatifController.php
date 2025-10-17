@@ -384,7 +384,7 @@ class AnggotaLegislatifController extends Controller
     {
         try {
             $options = AnggotaLegislatif::where('status', 'Aktif')
-                                     ->select('id', 'kode_aleg', 'nama_lengkap', 'jabatan_saat_ini', 'foto_profil')
+                                     ->select('id', 'kode_aleg', 'nama_lengkap', 'jabatan_saat_ini', 'foto_profil', 'partai_politik', 'daerah_pemilihan')
                                      ->orderBy('nama_lengkap')
                                      ->get();
 

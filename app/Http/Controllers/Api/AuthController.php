@@ -274,7 +274,11 @@ class AuthController extends Controller
                 'role' => 'user',
                 'google_id' => $request->google_id,
                 'anggota_legislatif_id' => $request->anggota_legislatif_id,
+                'is_active' => true, // Auto-activate Google sign-in users
             ]);
+
+            // Refresh user from database to ensure all attributes are loaded
+            $user->refresh();
         } else {
             // Existing user - update google_id if not set
             if (!$user->google_id) {
@@ -285,10 +289,19 @@ class AuthController extends Controller
             if ($request->has('anggota_legislatif_id') && $request->anggota_legislatif_id) {
                 $user->update(['anggota_legislatif_id' => $request->anggota_legislatif_id]);
             }
+
+            // Refresh user from database
+            $user->refresh();
         }
 
-        // Check if user is active
+        // Check if user is active - should always be true for new Google users
         if (!$user->is_active) {
+            \Log::error('Google Sign-In: User not active', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'is_active' => $user->is_active,
+            ]);
+
             return response()->json([
                 'status' => 'error',
                 'message' => 'Account is not active'
