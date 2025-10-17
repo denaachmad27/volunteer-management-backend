@@ -19,6 +19,7 @@ class User extends Authenticatable
         'phone',
         'is_active',
         'anggota_legislatif_id',
+        'google_id',
     ];
 
     protected $hidden = [

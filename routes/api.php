@@ -33,6 +33,7 @@ Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
     Route::post('register', [AuthController::class, 'register'])->middleware('throttle:register');
+    Route::post('google-signin', [AuthController::class, 'googleSignIn'])->middleware('throttle:login');
 });
 
 // Public Anggota Legislatif Routes (untuk dropdown registrasi dan detail profil)

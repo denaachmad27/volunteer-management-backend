@@ -226,13 +226,104 @@ class AuthController extends Controller
     }
 
     /**
+     * Google Sign-In authentication
+     * Creates or authenticates user from Google account
+     */
+    public function googleSignIn(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'name' => 'required|string|max:255',
+            'google_id' => 'required|string',
+            'anggota_legislatif_id' => 'nullable|exists:anggota_legislatifs,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Find user by email or google_id
+        $user = User::where('email', $request->email)
+            ->orWhere('google_id', $request->google_id)
+            ->first();
+
+        if (!$user) {
+            // New user - check if anggota_legislatif_id is provided
+            if (!$request->has('anggota_legislatif_id')) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User not found',
+                    'data' => [
+                        'is_new_user' => true,
+                        'email' => $request->email,
+                        'name' => $request->name,
+                        'google_id' => $request->google_id,
+                    ]
+                ], 404);
+            }
+
+            // Create new user with selected aleg
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make(uniqid()), // Random password for Google users
+                'role' => 'user',
+                'google_id' => $request->google_id,
+                'anggota_legislatif_id' => $request->anggota_legislatif_id,
+            ]);
+        } else {
+            // Existing user - update google_id if not set
+            if (!$user->google_id) {
+                $user->update(['google_id' => $request->google_id]);
+            }
+
+            // If anggota_legislatif_id provided, update it
+            if ($request->has('anggota_legislatif_id') && $request->anggota_legislatif_id) {
+                $user->update(['anggota_legislatif_id' => $request->anggota_legislatif_id]);
+            }
+        }
+
+        // Check if user is active
+        if (!$user->is_active) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Account is not active'
+            ], 401);
+        }
+
+        // Delete old tokens
+        $user->tokens()->delete();
+
+        // Create new token
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        // Load anggota legislatif data if exists
+        $user->load('anggotaLegislatif');
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Google sign-in successful',
+            'data' => [
+                'user' => $user,
+                'token' => $token,
+                'token_type' => 'Bearer',
+                'is_new_user' => false,
+            ]
+        ]);
+    }
+
+    /**
      * Get user's selected anggota legislatif
      */
     public function getUserLegislativeMember(Request $request)
     {
         try {
             $user = $request->user();
-            
+
             if (!$user->anggota_legislatif_id) {
                 return response()->json([
                     'status' => 'error',
@@ -241,7 +332,7 @@ class AuthController extends Controller
             }
 
             $anggotaLegislatif = $user->anggotaLegislatif;
-            
+
             if (!$anggotaLegislatif) {
                 return response()->json([
                     'status' => 'error',
