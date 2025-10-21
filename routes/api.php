@@ -20,6 +20,8 @@ use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\GeneralSettingsController;
 use App\Http\Controllers\Api\AnggotaLegislatifController;
 use App\Http\Controllers\Api\RelawanController;
+use App\Http\Controllers\Api\ResesController;
+use App\Http\Controllers\Api\PokirController;
 use App\Http\Controllers\VolunteerController;
 
 /*
@@ -131,6 +133,18 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('{id}', [ComplaintController::class, 'show']);
         Route::put('{id}', [ComplaintController::class, 'update']);
         Route::post('{id}/feedback', [ComplaintController::class, 'giveFeedback']);
+    });
+
+    // Reses Routes (untuk user - read only)
+    Route::prefix('reses')->group(function () {
+        Route::get('/', [ResesController::class, 'index']);
+        Route::get('{id}', [ResesController::class, 'show']);
+    });
+
+    // Pokir Routes (untuk user - read only)
+    Route::prefix('pokir')->group(function () {
+        Route::get('/', [PokirController::class, 'index']);
+        Route::get('{id}', [PokirController::class, 'show']);
     });
 
     // Admin Only Routes
@@ -270,6 +284,26 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::post('logo', [GeneralSettingsController::class, 'uploadLogo']);
             Route::delete('logo', [GeneralSettingsController::class, 'deleteLogo']);
             Route::get('options', [GeneralSettingsController::class, 'getOptions']);
+        });
+
+        // Admin Reses Management Routes
+        Route::prefix('reses')->group(function () {
+            Route::get('/', [ResesController::class, 'index']);
+            Route::post('/', [ResesController::class, 'store']);
+            Route::get('{id}', [ResesController::class, 'show']);
+            Route::put('{id}', [ResesController::class, 'update']);
+            Route::post('{id}', [ResesController::class, 'update']); // Method spoofing support
+            Route::delete('{id}', [ResesController::class, 'destroy']);
+        });
+
+        // Admin Pokir Management Routes
+        Route::prefix('pokir')->group(function () {
+            Route::get('/', [PokirController::class, 'index']);
+            Route::post('/', [PokirController::class, 'store']);
+            Route::get('{id}', [PokirController::class, 'show']);
+            Route::put('{id}', [PokirController::class, 'update']);
+            Route::post('{id}', [PokirController::class, 'update']); // Method spoofing support
+            Route::delete('{id}', [PokirController::class, 'destroy']);
         });
     });
 });
