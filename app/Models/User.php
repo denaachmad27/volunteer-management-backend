@@ -87,6 +87,12 @@ class User extends Authenticatable
         return $this->belongsTo(User::class, 'relawan_id');
     }
 
+    // Relationship with WargaBinaan
+    public function wargaBinaan()
+    {
+        return $this->hasMany(WargaBinaan::class, 'relawan_id');
+    }
+
     // Helper methods
     public function isAdmin()
     {

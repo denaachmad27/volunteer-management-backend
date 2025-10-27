@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\AnggotaLegislatifController;
 use App\Http\Controllers\Api\RelawanController;
 use App\Http\Controllers\Api\ResesController;
 use App\Http\Controllers\Api\PokirController;
+use App\Http\Controllers\Api\WargaBinaanController;
 use App\Http\Controllers\VolunteerController;
 
 /*
@@ -304,6 +305,21 @@ Route::middleware(['auth:sanctum'])->group(function () {
             Route::put('{id}', [PokirController::class, 'update']);
             Route::post('{id}', [PokirController::class, 'update']); // Method spoofing support
             Route::delete('{id}', [PokirController::class, 'destroy']);
+        });
+
+        // Admin Warga Binaan Management Routes
+        Route::prefix('warga-binaan')->group(function () {
+            Route::get('/', [WargaBinaanController::class, 'index']);
+            Route::post('/', [WargaBinaanController::class, 'store']);
+            Route::get('statistics', [WargaBinaanController::class, 'statistics']);
+            Route::get('relawan-options', [WargaBinaanController::class, 'getRelawanOptions']);
+            Route::get('download-template', [WargaBinaanController::class, 'downloadTemplate']);
+            Route::post('preview-csv', [WargaBinaanController::class, 'previewCsv']);
+            Route::post('mass-upload', [WargaBinaanController::class, 'massUpload']);
+            Route::post('bulk-delete', [WargaBinaanController::class, 'bulkDelete']);
+            Route::get('{id}', [WargaBinaanController::class, 'show']);
+            Route::put('{id}', [WargaBinaanController::class, 'update']);
+            Route::delete('{id}', [WargaBinaanController::class, 'destroy']);
         });
     });
 });
