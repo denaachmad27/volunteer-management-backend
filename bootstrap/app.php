@@ -27,7 +27,18 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api([
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
+
+        // Redirect untuk unauthenticated users - return null untuk API
+        $middleware->redirectGuestsTo(fn ($request) => null);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Handle unauthenticated API requests dengan JSON response
+        $exceptions->renderable(function (\Illuminate\Auth\AuthenticationException $e, $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated. Please provide a valid authentication token.',
+                ], 401);
+            }
+        });
     })->create();
