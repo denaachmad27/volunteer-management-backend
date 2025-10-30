@@ -170,6 +170,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Admin News Routes
         Route::prefix('news')->group(function () {
             Route::get('/', [NewsController::class, 'adminIndex']);
+            Route::get('/test', [NewsController::class, 'adminTest']); // Test endpoint
             Route::post('/', [NewsController::class, 'store']);
             Route::put('{id}', [NewsController::class, 'update']);
             Route::post('{id}', [NewsController::class, 'update']); // Method spoofing support

@@ -23,10 +23,23 @@ class WargaBinaanController extends Controller
             $perPage = $request->get('per_page', 15);
             $search = $request->get('search');
             $relawanId = $request->get('relawan_id');
+            $user = $request->user();
 
             $query = WargaBinaan::with('relawan:id,name,email');
 
-            // Filter by relawan
+            // Filter berdasarkan role dan aleg user
+            // Super admin bisa lihat semua data
+            if ($user && $user->isAdmin()) {
+                // Tidak ada filter untuk super admin
+            }
+            // Admin aleg filter berdasarkan aleg mereka
+            elseif ($user && $user->isAdminAleg() && $user->anggota_legislatif_id) {
+                $query->whereHas('relawan', function ($q) use ($user) {
+                    $q->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+                });
+            }
+
+            // Filter by relawan (manual filter dari request parameter)
             if ($relawanId) {
                 $query->where('relawan_id', $relawanId);
             }
@@ -364,9 +377,23 @@ class WargaBinaanController extends Controller
     {
         try {
             $relawanId = $request->get('relawan_id');
+            $user = $request->user();
 
             $query = WargaBinaan::query();
 
+            // Filter berdasarkan role dan aleg user
+            // Super admin bisa lihat semua data
+            if ($user && $user->isAdmin()) {
+                // Tidak ada filter untuk super admin
+            }
+            // Admin aleg filter berdasarkan aleg mereka
+            elseif ($user && $user->isAdminAleg() && $user->anggota_legislatif_id) {
+                $query->whereHas('relawan', function ($q) use ($user) {
+                    $q->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+                });
+            }
+
+            // Manual filter dari request parameter
             if ($relawanId) {
                 $query->where('relawan_id', $relawanId);
             }
@@ -413,8 +440,21 @@ class WargaBinaanController extends Controller
     public function getRelawanOptions()
     {
         try {
-            $relawan = User::whereIn('role', ['relawan', 'user']) // Backward compatibility
-                ->select('id', 'name', 'email')
+            $user = request()->user();
+
+            $query = User::whereIn('role', ['relawan', 'user']); // Backward compatibility
+
+            // Filter berdasarkan role dan aleg user
+            // Super admin bisa lihat semua relawan
+            if ($user && $user->isAdmin()) {
+                // Tidak ada filter untuk super admin
+            }
+            // Admin aleg filter berdasarkan aleg mereka
+            elseif ($user && $user->isAdminAleg() && $user->anggota_legislatif_id) {
+                $query->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+            }
+
+            $relawan = $query->select('id', 'name', 'email')
                 ->orderBy('name')
                 ->get();
 

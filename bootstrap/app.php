@@ -22,6 +22,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         // Tambahkan security headers secara global
         $middleware->append(SecurityHeadersMiddleware::class);
+
+        // Sanctum middleware untuk API authentication
+        $middleware->api([
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

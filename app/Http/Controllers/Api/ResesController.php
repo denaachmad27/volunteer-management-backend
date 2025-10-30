@@ -17,12 +17,24 @@ class ResesController extends Controller
     {
         $query = Reses::with(['anggotaLegislatif', 'creator']);
 
+        // Filter berdasarkan role dan aleg user
+        $user = $request->user();
+
+        // Super admin bisa lihat semua data
+        if ($user && $user->isAdmin()) {
+            // Tidak ada filter untuk super admin
+        }
+        // Admin aleg filter berdasarkan aleg mereka
+        elseif ($user && $user->isAdminAleg() && $user->anggota_legislatif_id) {
+            $query->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+        }
+
         // Filter by status
         if ($request->has('status') && $request->status != '') {
             $query->status($request->status);
         }
 
-        // Filter by anggota legislatif
+        // Filter by anggota legislatif (manual filter dari request parameter)
         if ($request->has('anggota_legislatif_id') && $request->anggota_legislatif_id != '') {
             $query->byAnggotaLegislatif($request->anggota_legislatif_id);
         }
@@ -111,7 +123,21 @@ class ResesController extends Controller
      */
     public function show(string $id)
     {
-        $reses = Reses::with(['anggotaLegislatif', 'creator'])->find($id);
+        $user = request()->user();
+
+        // Build query berdasarkan role
+        $query = Reses::with(['anggotaLegislatif', 'creator']);
+
+        // Super admin bisa lihat semua data
+        if ($user && $user->isAdmin()) {
+            // Tidak ada filter untuk super admin
+        }
+        // Admin aleg filter berdasarkan aleg mereka
+        elseif ($user && $user->isAdminAleg() && $user->anggota_legislatif_id) {
+            $query->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+        }
+
+        $reses = $query->find($id);
 
         if (!$reses) {
             return response()->json([
@@ -147,7 +173,21 @@ class ResesController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $reses = Reses::find($id);
+        $user = $request->user();
+
+        // Build query berdasarkan role
+        $query = Reses::query();
+
+        // Super admin bisa lihat semua data
+        if ($user && $user->isAdmin()) {
+            // Tidak ada filter untuk super admin
+        }
+        // Admin aleg filter berdasarkan aleg mereka
+        elseif ($user && $user->isAdminAleg() && $user->anggota_legislatif_id) {
+            $query->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+        }
+
+        $reses = $query->find($id);
 
         if (!$reses) {
             return response()->json([
@@ -203,7 +243,21 @@ class ResesController extends Controller
      */
     public function destroy(string $id)
     {
-        $reses = Reses::find($id);
+        $user = request()->user();
+
+        // Build query berdasarkan role
+        $query = Reses::query();
+
+        // Super admin bisa lihat semua data
+        if ($user && $user->isAdmin()) {
+            // Tidak ada filter untuk super admin
+        }
+        // Admin aleg filter berdasarkan aleg mereka
+        elseif ($user && $user->isAdminAleg() && $user->anggota_legislatif_id) {
+            $query->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+        }
+
+        $reses = $query->find($id);
 
         if (!$reses) {
             return response()->json([

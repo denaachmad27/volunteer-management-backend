@@ -19,7 +19,22 @@ class RelawanController extends Controller
     {
         $authUser = $request->user();
 
-        if (!method_exists($authUser, 'isRelawan') || !$authUser->isRelawan()) {
+        // Super admin dan admin aleg bisa melihat semua warga
+        if ($authUser->isAdmin()) {
+            // Super admin bisa lihat semua warga tanpa filter
+            $query = User::with(['profile'])
+                ->where('role', 'warga');
+        } elseif ($authUser->isAdminAleg()) {
+            // Admin aleg bisa lihat warga di wilayahnya
+            $query = User::with(['profile'])
+                ->where('role', 'warga')
+                ->where('anggota_legislatif_id', $authUser->anggota_legislatif_id);
+        } elseif (method_exists($authUser, 'isRelawan') && $authUser->isRelawan()) {
+            // Relawan hanya bisa lihat warga yang ditugaskan kepadanya
+            $query = User::with(['profile'])
+                ->where('role', 'warga')
+                ->where('relawan_id', $authUser->id);
+        } else {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Hanya relawan yang boleh mengakses daftar warga.'
@@ -29,10 +44,6 @@ class RelawanController extends Controller
         $perPage = (int) ($request->get('per_page', 15));
         $page = (int) ($request->get('page', 1));
         $search = trim((string) $request->get('search', ''));
-
-        $query = User::with(['profile'])
-            ->where('role', 'warga')
-            ->where('relawan_id', $authUser->id);
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {

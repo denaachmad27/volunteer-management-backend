@@ -16,6 +16,18 @@ class PokirController extends Controller
     {
         $query = Pokir::with(['anggotaLegislatif', 'creator']);
 
+        // Filter berdasarkan role dan aleg user
+        $user = $request->user();
+
+        // Super admin bisa lihat semua data
+        if ($user && $user->isAdmin()) {
+            // Tidak ada filter untuk super admin
+        }
+        // Admin aleg filter berdasarkan aleg mereka
+        elseif ($user && $user->isAdminAleg() && $user->anggota_legislatif_id) {
+            $query->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+        }
+
         // Filter by status
         if ($request->has('status') && $request->status != '') {
             $query->status($request->status);
@@ -31,7 +43,7 @@ class PokirController extends Controller
             $query->prioritas($request->prioritas);
         }
 
-        // Filter by anggota legislatif
+        // Filter by anggota legislatif (manual filter dari request parameter)
         if ($request->has('anggota_legislatif_id') && $request->anggota_legislatif_id != '') {
             $query->byAnggotaLegislatif($request->anggota_legislatif_id);
         }
@@ -109,7 +121,21 @@ class PokirController extends Controller
      */
     public function show(string $id)
     {
-        $pokir = Pokir::with(['anggotaLegislatif', 'creator'])->find($id);
+        $user = request()->user();
+
+        // Build query berdasarkan role
+        $query = Pokir::with(['anggotaLegislatif', 'creator']);
+
+        // Super admin bisa lihat semua data
+        if ($user && $user->isAdmin()) {
+            // Tidak ada filter untuk super admin
+        }
+        // Admin aleg filter berdasarkan aleg mereka
+        elseif ($user && $user->isAdminAleg() && $user->anggota_legislatif_id) {
+            $query->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+        }
+
+        $pokir = $query->find($id);
 
         if (!$pokir) {
             return response()->json([
@@ -145,7 +171,21 @@ class PokirController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $pokir = Pokir::find($id);
+        $user = $request->user();
+
+        // Build query berdasarkan role
+        $query = Pokir::query();
+
+        // Super admin bisa lihat semua data
+        if ($user && $user->isAdmin()) {
+            // Tidak ada filter untuk super admin
+        }
+        // Admin aleg filter berdasarkan aleg mereka
+        elseif ($user && $user->isAdminAleg() && $user->anggota_legislatif_id) {
+            $query->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+        }
+
+        $pokir = $query->find($id);
 
         if (!$pokir) {
             return response()->json([
@@ -189,7 +229,21 @@ class PokirController extends Controller
      */
     public function destroy(string $id)
     {
-        $pokir = Pokir::find($id);
+        $user = request()->user();
+
+        // Build query berdasarkan role
+        $query = Pokir::query();
+
+        // Super admin bisa lihat semua data
+        if ($user && $user->isAdmin()) {
+            // Tidak ada filter untuk super admin
+        }
+        // Admin aleg filter berdasarkan aleg mereka
+        elseif ($user && $user->isAdminAleg() && $user->anggota_legislatif_id) {
+            $query->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+        }
+
+        $pokir = $query->find($id);
 
         if (!$pokir) {
             return response()->json([

@@ -8,5 +8,5 @@ Route::get('/', function () {
 });
 
 // Sanctum SPA Auth endpoints for web admin
-Route::post('/login', [AuthController::class, 'webLogin']);
-Route::post('/logout', [AuthController::class, 'webLogout']);
+Route::post('/login', [AuthController::class, 'webLogin'])->name('login');
+Route::post('/logout', [AuthController::class, 'webLogout'])->name('logout');

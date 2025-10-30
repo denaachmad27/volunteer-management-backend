@@ -18,15 +18,22 @@ class NewsController extends Controller
     {
         $query = News::published()->with('author');
 
-        // Filter berdasarkan aleg user (untuk user/volunteer)
+        // Filter berdasarkan role dan aleg user
         $user = $request->user();
-        if ($user && $user->anggota_legislatif_id) {
+
+        // Super admin bisa lihat semua konten
+        if ($user && $user->isAdmin()) {
+            // Tidak ada filter untuk super admin
+        }
+        // Admin aleg filter berdasarkan aleg mereka
+        elseif ($user && $user->isAdminAleg() && $user->anggota_legislatif_id) {
             $query->where(function ($q) use ($user) {
                 $q->where('anggota_legislatif_id', $user->anggota_legislatif_id)
                   ->orWhereNull('anggota_legislatif_id'); // Konten umum (tanpa aleg spesifik)
             });
-        } else {
-            // Jika user tidak punya aleg, hanya tampilkan konten umum
+        }
+        // User biasa hanya konten umum
+        else {
             $query->whereNull('anggota_legislatif_id');
         }
 
@@ -65,14 +72,22 @@ class NewsController extends Controller
     {
         $query = News::where('slug', $slug)->published()->with('author');
 
-        // Filter berdasarkan aleg user
+        // Filter berdasarkan role dan aleg user
         $user = $request->user();
-        if ($user && $user->anggota_legislatif_id) {
+
+        // Super admin bisa lihat semua konten
+        if ($user && $user->isAdmin()) {
+            // Tidak ada filter untuk super admin
+        }
+        // Admin aleg filter berdasarkan aleg mereka
+        elseif ($user && $user->isAdminAleg() && $user->anggota_legislatif_id) {
             $query->where(function ($q) use ($user) {
                 $q->where('anggota_legislatif_id', $user->anggota_legislatif_id)
                   ->orWhereNull('anggota_legislatif_id');
             });
-        } else {
+        }
+        // User biasa hanya konten umum
+        else {
             $query->whereNull('anggota_legislatif_id');
         }
 
@@ -96,13 +111,20 @@ class NewsController extends Controller
             ->where('kategori', $news->kategori)
             ->where('id', '!=', $news->id);
 
-        // Filter berita terkait berdasarkan aleg user
-        if ($user && $user->anggota_legislatif_id) {
+        // Filter berita terkait berdasarkan role dan aleg user
+        // Super admin bisa lihat semua konten
+        if ($user && $user->isAdmin()) {
+            // Tidak ada filter untuk super admin
+        }
+        // Admin aleg filter berdasarkan aleg mereka
+        elseif ($user && $user->isAdminAleg() && $user->anggota_legislatif_id) {
             $relatedQuery->where(function ($q) use ($user) {
                 $q->where('anggota_legislatif_id', $user->anggota_legislatif_id)
                   ->orWhereNull('anggota_legislatif_id');
             });
-        } else {
+        }
+        // User biasa hanya konten umum
+        else {
             $relatedQuery->whereNull('anggota_legislatif_id');
         }
 
@@ -124,19 +146,44 @@ class NewsController extends Controller
      */
     public function adminIndex(Request $request)
     {
+        // Debug logging
+        \Log::info('=== NewsController@adminIndex Debug ===');
+        $user = $request->user();
+        \Log::info('User:', [
+            'id' => $user?->id,
+            'email' => $user?->email,
+            'role' => $user?->role,
+            'isAdmin' => $user?->isAdmin(),
+            'isAdminAleg' => $user?->isAdminAleg(),
+            'anggota_legislatif_id' => $user?->anggota_legislatif_id
+        ]);
+
         $query = News::with('author');
 
         // Filter berdasarkan role admin
-        $user = $request->user();
-        if ($user->isAdminAleg()) {
-            // Admin aleg hanya melihat konten untuk aleg mereka
-            $query->byAnggotaLegislatif($user->anggota_legislatif_id);
+        // Super admin (role 'admin') bisa melihat semua berita tanpa filter
+        // Admin alef hanya melihat konten untuk aleg mereka + konten umum
+        if ($user && $user->isAdminAleg() && $user->anggota_legislatif_id) {
+            \Log::info('Applying admin_aleg filter for aleg_id: ' . $user->anggota_legislatif_id);
+            $query->where(function ($q) use ($user) {
+                $q->where('anggota_legislatif_id', $user->anggota_legislatif_id)
+                  ->orWhereNull('anggota_legislatif_id');
+            });
+        } else {
+            \Log::info('No id_aleg filter applied - showing all news');
         }
-        // Super admin bisa melihat semua
 
-        // Filter berdasarkan status publish
-        if ($request->has('is_published')) {
-            $query->where('is_published', $request->is_published === 'true');
+        // Admin super (role 'admin') tidak ada filter - lihat semua berita
+
+        // Default filter untuk mobile admin: hanya published news
+        // Override jika parameter is_published diset secara eksplisit
+        if (!$request->has('is_published')) {
+            \Log::info('Applying default published filter');
+            $query->where('is_published', true);
+        } else {
+            $isPublished = $request->is_published === 'true';
+            \Log::info('Applying explicit published filter: ' . $isPublished);
+            $query->where('is_published', $isPublished);
         }
 
         // Filter berdasarkan kategori
@@ -167,6 +214,23 @@ class NewsController extends Controller
 
         $news = $query->paginate(10);
 
+        // Debug logging hasil
+        \Log::info('Query Results:', [
+            'total_count' => $news->total(),
+            'current_page' => $news->currentPage(),
+            'per_page' => $news->perPage(),
+            'news_count' => $news->getCollection()->count(),
+            'news_items' => $news->getCollection()->map(function ($article) {
+                return [
+                    'id' => $article->id,
+                    'judul' => $article->judul,
+                    'anggota_legislatif_id' => $article->anggota_legislatif_id,
+                    'author_id' => $article->created_by,
+                    'is_published' => $article->is_published
+                ];
+            })->toArray()
+        ]);
+
         // Tambahkan calculated fields
         $news->getCollection()->each(function ($article) {
             $article->excerpt = $article->getExcerptAttribute();
@@ -176,6 +240,40 @@ class NewsController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => $news
+        ]);
+    }
+
+    /**
+     * Admin Test: Tampilkan semua berita tanpa filter apa pun
+     */
+    public function adminTest(Request $request)
+    {
+        \Log::info('=== NewsController@adminTest Debug ===');
+
+        // Ambil semua berita tanpa filter sama sekali
+        $allNews = News::with(['author'])->get();
+
+        \Log::info('All News Count:', [
+            'total_count' => $allNews->count(),
+            'items' => $allNews->map(function ($article) {
+                return [
+                    'id' => $article->id,
+                    'judul' => $article->judul,
+                    'anggota_legislatif_id' => $article->anggota_legislatif_id,
+                    'author_id' => $article->created_by,
+                    'is_published' => $article->is_published,
+                    'published_at' => $article->published_at
+                ];
+            })->toArray()
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Test endpoint - all news without filters',
+            'data' => [
+                'total' => $allNews->count(),
+                'news' => $allNews
+            ]
         ]);
     }
 

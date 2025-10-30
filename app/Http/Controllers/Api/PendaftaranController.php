@@ -156,6 +156,20 @@ class PendaftaranController extends Controller
     {
         $query = Pendaftaran::with(['user.profile', 'bantuanSosial']);
 
+        // Filter berdasarkan role dan aleg user
+        $user = $request->user();
+
+        // Super admin bisa lihat semua data
+        if ($user && $user->isAdmin()) {
+            // Tidak ada filter untuk super admin
+        }
+        // Admin aleg filter berdasarkan aleg mereka
+        elseif ($user && $user->isAdminAleg() && $user->anggota_legislatif_id) {
+            $query->whereHas('user', function ($q) use ($user) {
+                $q->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+            });
+        }
+
         // Filter berdasarkan status
         if ($request->has('status')) {
             $query->where('status', $request->status);
@@ -404,13 +418,33 @@ class PendaftaranController extends Controller
      */
     public function statistics(Request $request)
     {
+        $user = $request->user();
+
+        // Base query berdasarkan role
+        $baseQuery = function() use ($user) {
+            $query = Pendaftaran::query();
+
+            // Super admin bisa lihat semua data
+            if ($user && $user->isAdmin()) {
+                // Tidak ada filter untuk super admin
+            }
+            // Admin aleg filter berdasarkan aleg mereka
+            elseif ($user && $user->isAdminAleg() && $user->anggota_legislatif_id) {
+                $query->whereHas('user', function ($q) use ($user) {
+                    $q->where('anggota_legislatif_id', $user->anggota_legislatif_id);
+                });
+            }
+
+            return $query;
+        };
+
         $stats = [
-            'total_pendaftaran' => Pendaftaran::count(),
-            'pending' => Pendaftaran::where('status', 'Pending')->count(),
-            'diproses' => Pendaftaran::where('status', 'Diproses')->count(),
-            'disetujui' => Pendaftaran::where('status', 'Disetujui')->count(),
-            'ditolak' => Pendaftaran::where('status', 'Ditolak')->count(),
-            'selesai' => Pendaftaran::where('status', 'Selesai')->count(),
+            'total_pendaftaran' => $baseQuery()->count(),
+            'pending' => $baseQuery()->where('status', 'Pending')->count(),
+            'diproses' => $baseQuery()->where('status', 'Diproses')->count(),
+            'disetujui' => $baseQuery()->where('status', 'Disetujui')->count(),
+            'ditolak' => $baseQuery()->where('status', 'Ditolak')->count(),
+            'selesai' => $baseQuery()->where('status', 'Selesai')->count(),
         ];
 
         // Statistik per bulan (6 bulan terakhir)
@@ -420,7 +454,7 @@ class PendaftaranController extends Controller
             $monthlyStats[] = [
                 'month' => $date->format('Y-m'),
                 'month_name' => $date->format('F Y'),
-                'total' => Pendaftaran::whereYear('created_at', $date->year)
+                'total' => $baseQuery()->whereYear('created_at', $date->year)
                     ->whereMonth('created_at', $date->month)
                     ->count(),
             ];
